@@ -55,6 +55,18 @@ class VM {
 
 
             // vCPU(s)
+            // some kind of kvm_vcpu struct is needed. will be implemented soon
+            for (int i = 0; i < this->vcpu_num; i++) {
+                r = ioctl(this->vmfd, KVM_CREATE_VCPU, i);
+                if (r < 0) {
+                    std::cerr << "KVM_CREATE_VCPU failed" << std::endl;
+                } else {
+                    std::cout << "KVM_CREATE_VCPU cpuid: " << i << " vcpufd: " << r << std::endl;
+                    close(r);
+                    std::cout << "vcpufd: " << r << " closed" << std::endl;
+                }
+            }
+
 
         }
 
@@ -72,6 +84,11 @@ class VM {
                     std::cout << "munmapped VM.ram_start" << std::endl;
             }
         }
+
+        void vcpuRun() {
+            return;
+        }
+
     private:
         KVM& kvm;
         const int vmfd;
