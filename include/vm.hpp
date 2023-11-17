@@ -9,6 +9,7 @@
 
 #include <linux/kvm.h>
 #include <kvm.hpp>
+#include <vcpu.hpp>
 
 
 // tmp const!
@@ -20,6 +21,7 @@ class VM {
     public:
         explicit VM(KVM& kvm, int vmfd, const uint64_t ram_size, const int vcpu_num) : kvm(kvm), vmfd(vmfd), ram_size(ram_size), vcpu_num(vcpu_num) {
             std::cout << "Constructing VM..." << std::endl;
+            vcpus = NULL;
             errno = 0;
             int r;
 
@@ -56,14 +58,16 @@ class VM {
 
             // vCPU(s)
             // some kind of kvm_vcpu struct is needed. will be implemented soon
+            this->vcpus = new Vcpu*[vcpu_num];
+
             for (int i = 0; i < this->vcpu_num; i++) {
                 r = ioctl(this->vmfd, KVM_CREATE_VCPU, i);
                 if (r < 0) {
                     std::cerr << "KVM_CREATE_VCPU failed" << std::endl;
+                    // exception
                 } else {
                     std::cout << "KVM_CREATE_VCPU cpuid: " << i << " vcpufd: " << r << std::endl;
-                    close(r);
-                    std::cout << "vcpufd: " << r << " closed" << std::endl;
+                    this->vcpus[i] = new Vcpu(*this, i, r);
                 }
             }
 
@@ -73,9 +77,13 @@ class VM {
         ~VM() {
             errno = 0;
             std::cout << "Destructing VM..." << std::endl;
-            if (this->vmfd >= 0) {
-                close(this->vmfd);
-                std::cout << "closed VM.vmfd" << std::endl;
+            for (int i = 0; i < this->vcpu_num; i++) {
+                std::cout << "deleted VM.vcpus[i]" << std::endl;
+                delete vcpus[i];
+            }
+            if (vcpus != NULL) {
+                std::cout << "deleted VM.vcpus" << std::endl;
+                delete vcpus;
             }
             if (this->ram_start != NULL) {
                 if (munmap(this->ram_start, this->ram_size) < 0)
@@ -83,11 +91,18 @@ class VM {
                 else
                     std::cout << "munmapped VM.ram_start" << std::endl;
             }
+            if (this->vmfd >= 0) {
+                close(this->vmfd);
+                std::cout << "closed VM.vmfd" << std::endl;
+            }
+
         }
 
         void vcpuRun() {
             return;
         }
+
+        Vcpu **vcpus;
 
     private:
         KVM& kvm;
