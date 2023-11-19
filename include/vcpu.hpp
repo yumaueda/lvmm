@@ -22,12 +22,15 @@ struct vcpu_regs {
     // and so on...
 };
 
+struct vcpu_run {
+    uint64_t dummy;
+};
+
 class Vcpu {
     public:
         explicit Vcpu(VM& vm, int cpu_id, int vcpu_fd);
         ~Vcpu();
 
-        int *dummy;
         struct vcpu_regs regs;
         struct vcpu_sregs sresg;
 
@@ -35,6 +38,7 @@ class Vcpu {
         VM& vm;
         const int cpu_id;
         const int vcpu_fd;
+        struct vcpu_run* vcpu_run;
 };
 
 

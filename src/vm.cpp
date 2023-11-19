@@ -41,7 +41,7 @@ VM::VM(KVM& kvm, int vmfd, const uint64_t ram_size, const int vcpu_num)\
         std::cerr << "VM.ram_size: " << ram_size << std::endl;
         // exception!
     } else {
-        errno = 0;
+        std::cout << "RAM mapped. VM.ram_start: " << ram_start << std::endl;
         if (madvise(ram_start, ram_size, MADV_MERGEABLE) < 0)
             std::cerr << "madvise failed: " << std::strerror(errno) << std::endl;
     }

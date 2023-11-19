@@ -21,8 +21,9 @@ class VM {
         explicit VM(KVM& kvm, int vmfd, const uint64_t ram_size, const int vcpu_num);
         ~VM();
 
-    private:
         KVM& kvm;
+
+    private:
         Vcpu **vcpus;
         const int vmfd;
         static constexpr const struct kvm_pit_config pit_config = {.flags = KVM_PIT_SPEAKER_DUMMY, .pad = {0}};

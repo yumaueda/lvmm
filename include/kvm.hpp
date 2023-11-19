@@ -18,6 +18,8 @@ class KVM {
         explicit KVM();
         ~KVM();
 
+        int mmap_size;
+
         template<typename... kvmIoctlArgs>
         int kvmIoctl(unsigned long request, kvmIoctlArgs... args) {
             int r = ioctl(fd, request, args...);
@@ -61,7 +63,6 @@ class KVM {
         int immediate_exit;
         int nr_slots, nr_as;
         int soft_vcpus_limit, hard_vcpus_limit;
-        int mmap_size;
         int coalesced_mmio;
 };
 
