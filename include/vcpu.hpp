@@ -2,8 +2,10 @@
 #define VCPU_HPP
 
 
+#include <kvm.hpp>
 #include <vm.hpp>
 
+class KVM;
 class VM;
 
 struct vcpu_sregs {
@@ -21,15 +23,8 @@ struct vcpu_regs {
 
 class Vcpu {
     public:
-        explicit Vcpu(VM& vm, int cpu_id, int vcpu_fd) : vm(vm), cpu_id(cpu_id), vcpu_fd(vcpu_fd) {
-            dummy = new int;
-        }
-
-        ~Vcpu() {
-            close(this->vcpu_fd);
-            std::cout << "closed vcpu_fd: " << this->vcpu_fd << std::endl;
-            delete dummy;
-        }
+        explicit Vcpu(VM& vm, int cpu_id, int vcpu_fd);
+        ~Vcpu();
 
         int *dummy;
         struct vcpu_regs regs;
@@ -39,7 +34,6 @@ class Vcpu {
         VM& vm;
         const int cpu_id;
         const int vcpu_fd;
-
 };
 
 

@@ -1,6 +1,7 @@
 #ifndef KVM_HPP
 #define KVM_HPP
 
+#include <sstream>
 #include <string_view>
 
 #include <fcntl.h>
@@ -28,47 +29,52 @@ class KVM {
 
         }
 
-        //tss??? needed???
+        template<typename... kvmIoctlArgs>
+        int kvmIoctl(unsigned long request, kvmIoctlArgs... args) {
+            int r = ioctl(fd, request, args...);
+            //debug
+            std::ostringstream args_oss;
+            args_oss << fd << ',' << request;
+            ((args_oss << ',' << args), ...);
+            std::string args_str = args_oss.str();
 
-        int kvmCreateVM(VM** ptr_vm, uint64_t ram_size, int vcpu_num) {
-            // when VM() fail we have to close vmfd in ret
-            // should be done in this func? constructors raise exception. should we have to hide it inside this func?
-            int ret;
+#ifdef MONITOR_KVMFD_IOCTL
+            std::cout << (std::string(__func__)\
+                + ": ioctl("\
+                + args_str\
+                + "): "\
+                + strerror(errno)) << std::endl;
+#endif  // MONITOR_KVMFD_IOCTL
 
-            // should consider about current cpu usage
-            if (vcpu_num > this->hardVcpusLimit) {
-                std::cerr << "vcpu_num exceeds kvm.hardVcpusLimit!" << std::endl;
-                return -1;
-            } else if (vcpu_num > this->softVcpusLimit) {
-                std::cout << "WARNING: vcpu_num exceeds kvm.softVcpusLimit!" << std::endl;
+            if (r < 0) {
+                r = -errno;
+                throw std::runtime_error(std::string(__func__)\
+                        + ": ioctl("\
+                        + args_str\
+                        + "): "\
+                        + strerror(errno));
             }
-
-            ret = ioctl(this->fd, KVM_CREATE_VM, 0);
-
-            if (ret < 0) {
-                std::cerr << "KVM_CREATE_VM failed" << std::endl;
-                return -1;
-            } else {
-                std::cout << "KVM_CREATE_VM vmfd: " << ret << std::endl;
-                std::cout << "KMV.kvmCreateVM() ram_size: " << ram_size << std::endl;
-                *ptr_vm = new VM(*this, ret, ram_size, vcpu_num);
-            }
-
-            return ret;
+            return r;
         }
 
+        int kvmCreateVM(VM** ptr_vm, uint64_t ram_size, int vcpu_num);
+
     private:
-        int kvmCapCheck();
-
         static constexpr const char* dev_kvm = "/dev/kvm";
-
-        // KVM state
         int fd;
 
-        int apiVer;
-        int hasImmediateExit;
-        int nrSlots, nrAS;
-        int softVcpusLimit, hardVcpusLimit;
+        void kvmCapCheck();
+
+
+        // KVM state
+        int api_ver;
+
+        // CAP
+        int immediate_exit;
+        int nr_slots, nr_as;
+        int soft_vcpus_limit, hard_vcpus_limit;
+        int mmap_size;
+        int coalesced_mmio;
 };
 
 #endif  // KVM_HPP
