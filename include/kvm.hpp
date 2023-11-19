@@ -1,16 +1,13 @@
 #ifndef KVM_HPP
 #define KVM_HPP
 
-#include <sstream>
-#include <string_view>
 
-#include <fcntl.h>
+#include <cstring>
+#include <sstream>
 #include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #include <linux/kvm.h>
+
 #include <vm.hpp>
 
 
@@ -19,15 +16,7 @@ class VM;
 class KVM {
     public:
         explicit KVM();
-
-        ~KVM() {
-            std::cout << "Destructing KVM..." << std::endl;
-            if (this->fd >= 0) {
-                close(this->fd);
-                std::cout << "closed KVM.fd" << std::endl;
-            }
-
-        }
+        ~KVM();
 
         template<typename... kvmIoctlArgs>
         int kvmIoctl(unsigned long request, kvmIoctlArgs... args) {

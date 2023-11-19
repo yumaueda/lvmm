@@ -5,8 +5,10 @@
 #include <kvm.hpp>
 #include <vm.hpp>
 
+
 class KVM;
 class VM;
+
 
 struct vcpu_sregs {
     uint64_t cr0, cr2, cr3, cr4, cr8;
@@ -19,7 +21,6 @@ struct vcpu_regs {
     uint64_t rip;
     // and so on...
 };
-
 
 class Vcpu {
     public:

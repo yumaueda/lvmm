@@ -1,13 +1,9 @@
 #ifndef VM_HPP
 #define VM_HPP
 
-#include <cerrno>
-#include <cstring>
-
-#include <sys/mman.h>
-#include <unistd.h>
 
 #include <linux/kvm.h>
+
 #include <kvm.hpp>
 #include <vcpu.hpp>
 
@@ -15,8 +11,10 @@
 // tmp const!
 #define KVM_32BIT_GAP_START
 
+
 class KVM;
 class Vcpu;
+
 
 class VM {
     public:

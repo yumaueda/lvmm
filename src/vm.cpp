@@ -1,5 +1,11 @@
+#include <cstring>
+#include <cerrno>
 #include <iostream>
+#include <sys/mman.h>
+#include <unistd.h>
+
 #include <vm.hpp>
+
 
 VM::VM(KVM& kvm, int vmfd, const uint64_t ram_size, const int vcpu_num) : kvm(kvm), vmfd(vmfd), ram_size(ram_size), vcpu_num(vcpu_num) {
     std::cout << "Constructing VM..." << std::endl;

@@ -1,9 +1,13 @@
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include <kvm.hpp>
 #include <cpufeat.hpp>
+#include <kvm.hpp>
 
 
 int KVM::kvmCreateVM(VM** ptr_vm, uint64_t ram_size, int vcpu_num) {
@@ -102,4 +106,13 @@ KVM::KVM() {
         mmap_size = ioctl(fd, KVM_GET_VCPU_MMAP_SIZE, 0);
         if (mmap_size < 0)
         std::cout << "mmap_size: " << mmap_size << std::endl;
+}
+
+KVM::~KVM() {
+    std::cout << "Destructing KVM..." << std::endl;
+    if (this->fd >= 0) {
+        close(this->fd);
+        std::cout << "closed KVM.fd" << std::endl;
+    }
+
 }
