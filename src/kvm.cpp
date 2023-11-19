@@ -8,6 +8,7 @@
 
 #include <cpufeat.hpp>
 #include <kvm.hpp>
+#include <ioctl.hpp>
 
 
 int KVM::kvmCreateVM(VM** ptr_vm, uint64_t ram_size, int vcpu_num) {
@@ -16,14 +17,14 @@ int KVM::kvmCreateVM(VM** ptr_vm, uint64_t ram_size, int vcpu_num) {
     int ret;
 
     // should consider about current cpu usage
-    if (vcpu_num > this->hard_vcpus_limit) {
+    if (vcpu_num > hard_vcpus_limit) {
         std::cerr << "vcpu_num exceeds kvm.hard_vcpus_limit!" << std::endl;
         return -1;
-    } else if (vcpu_num > this->soft_vcpus_limit) {
+    } else if (vcpu_num > soft_vcpus_limit) {
         std::cout << "WARNING: vcpu_num exceeds kvm.soft_vcpus_limit!" << std::endl;
     }
 
-    ret = ioctl(this->fd, KVM_CREATE_VM, 0);
+    ret = kvmIoctl(KVM_CREATE_VM, 0);
 
     if (ret < 0) {
         std::cerr << "KVM_CREATE_VM failed" << std::endl;
@@ -110,8 +111,8 @@ KVM::KVM() {
 
 KVM::~KVM() {
     std::cout << "Destructing KVM..." << std::endl;
-    if (this->fd >= 0) {
-        close(this->fd);
+    if (fd >= 0) {
+        close(fd);
         std::cout << "closed KVM.fd" << std::endl;
     }
 

@@ -7,55 +7,58 @@
 #include <vm.hpp>
 
 
-VM::VM(KVM& kvm, int vmfd, const uint64_t ram_size, const int vcpu_num) : kvm(kvm), vmfd(vmfd), ram_size(ram_size), vcpu_num(vcpu_num) {
+VM::VM(KVM& kvm, int vmfd, const uint64_t ram_size, const int vcpu_num)\
+        : kvm(kvm), vmfd(vmfd), ram_size(ram_size), vcpu_num(vcpu_num)
+{
     std::cout << "Constructing VM..." << std::endl;
     vcpus = NULL;
     errno = 0;
     int r;
 
     /*
-        * Create VIOAPIC, VPIC. Set up future vCPUs to use them as a local APIC.
-        * GSI00-15 -> IOAPIC/PIC
-        * GIS16-23 -> IOAPIC
-        */
-    r = ioctl(this->vmfd, KVM_CREATE_IRQCHIP);
+     * Create VIOAPIC, VPIC.
+     * Set up future vCPUs to use them as a local APIC.
+     * GSI00-15 -> IOAPIC/PIC
+     * GIS16-23 -> IOAPIC
+     */
+    r = ioctl(vmfd, KVM_CREATE_IRQCHIP);
     if (r < 0)
         std::cerr << "KVM_CREATE_IRQCHIP failed" << std::endl;
         // exception!
-    r = ioctl(this->vmfd, KVM_CREATE_PIT2, &this->pit_config);
+    r = ioctl(vmfd, KVM_CREATE_PIT2, &this->pit_config);
     if (r < 0)
         std::cerr << "KVM_CREATE_PIT2 failed" << std::endl;
         // exception!
 
     // RAM
     // not caring about hugetlbpage
-    this->ram_start = NULL;
-    this->ram_page_size = getpagesize();
+    ram_start = NULL;
+    ram_page_size = getpagesize();
     // FIX? 32_BIT_GAP and mprotect(PROT_NONE)?
-    this->ram_start = mmap(NULL, this->ram_size, (PROT_READ|PROT_WRITE), (MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE), -1, 0);
-    if (this->ram_start == MAP_FAILED) {
+    ram_start = mmap(NULL, ram_size, (PROT_READ|PROT_WRITE), (MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE), -1, 0);
+    if (ram_start == MAP_FAILED) {
         std::cerr << "mmap failed: " << std::strerror(errno) << std::endl;
-        std::cerr << "VM.ram_size: " << this->ram_size << std::endl;
+        std::cerr << "VM.ram_size: " << ram_size << std::endl;
         // exception!
     } else {
         errno = 0;
-        if (madvise(this->ram_start, this->ram_size, MADV_MERGEABLE) < 0)
+        if (madvise(ram_start, ram_size, MADV_MERGEABLE) < 0)
             std::cerr << "madvise failed: " << std::strerror(errno) << std::endl;
     }
 
 
     // vCPU(s)
     // some kind of kvm_vcpu struct is needed. will be implemented soon
-    this->vcpus = new Vcpu*[vcpu_num];
+    vcpus = new Vcpu*[vcpu_num];
 
-    for (int i = 0; i < this->vcpu_num; i++) {
-        r = ioctl(this->vmfd, KVM_CREATE_VCPU, i);
+    for (int i = 0; i < vcpu_num; i++) {
+        r = ioctl(vmfd, KVM_CREATE_VCPU, i);
         if (r < 0) {
             std::cerr << "KVM_CREATE_VCPU failed" << std::endl;
             // exception
         } else {
             std::cout << "KVM_CREATE_VCPU cpuid: " << i << " vcpufd: " << r << std::endl;
-            this->vcpus[i] = new Vcpu(*this, i, r);
+            vcpus[i] = new Vcpu(*this, i, r);
         }
     }
 

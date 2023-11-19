@@ -21,7 +21,6 @@ class KVM {
         template<typename... kvmIoctlArgs>
         int kvmIoctl(unsigned long request, kvmIoctlArgs... args) {
             int r = ioctl(fd, request, args...);
-            //debug
             std::ostringstream args_oss;
             args_oss << fd << ',' << request;
             ((args_oss << ',' << args), ...);
