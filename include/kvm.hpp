@@ -2,63 +2,36 @@
 #define KVM_HPP
 
 
-#include <cstring>
-#include <sstream>
 #include <sys/ioctl.h>
 
 #include <linux/kvm.h>
 
+#include <baseclass.hpp>
 #include <vm.hpp>
+
+
+constexpr const char* DEV_KVM = "/dev/kvm";
 
 
 class VM;
 
-class KVM {
+class KVM : public BaseClass {
     public:
-        explicit KVM();
+        explicit KVM(int fd);
         ~KVM();
 
         int mmap_size;
 
-        template<typename... kvmIoctlArgs>
-        int kvmIoctl(unsigned long request, kvmIoctlArgs... args) {
-            int r = ioctl(fd, request, args...);
-            std::ostringstream args_oss;
-            args_oss << fd << ',' << request;
-            ((args_oss << ',' << args), ...);
-            std::string args_str = args_oss.str();
-
-#ifdef MONITOR_KVMFD_IOCTL
-            std::cout << (std::string(__func__)\
-                + ": ioctl("\
-                + args_str\
-                + "): "\
-                + strerror(errno)) << std::endl;
-#endif  // MONITOR_KVMFD_IOCTL
-
-            if (r < 0) {
-                r = -errno;
-                throw std::runtime_error(std::string(__func__)\
-                        + ": ioctl("\
-                        + args_str\
-                        + "): "\
-                        + strerror(errno));
-            }
-            return r;
-        }
-
         int kvmCreateVM(VM** ptr_vm, uint64_t ram_size, int vcpu_num);
 
-    private:
-        static constexpr const char* dev_kvm = "/dev/kvm";
+    protected:
         int fd;
 
+    private:
         void kvmCapCheck();
-
 
         // KVM state
         int api_ver;
-
         // CAP
         int immediate_exit;
         int nr_slots, nr_as;

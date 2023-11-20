@@ -1,10 +1,21 @@
 #include <iostream>
 
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+
 #include <kvm.hpp>
+#include <vm.hpp>
+#include <vcpu.hpp>
 
 int main(void) {
     int r;
-    KVM *kvm = new KVM;
+    if ((r = open(DEV_KVM, O_RDWR)) < 0)
+        std::cout<< (std::string(__func__) + ": Could not open " + DEV_KVM + ".") << std::endl;
+    std::cout << "KVM.fd: " << r << std::endl;
+
+    KVM *kvm = new KVM(r);
     VM *vm;
 
     const uint64_t ram_size = static_cast<uint64_t>(8) << 30;

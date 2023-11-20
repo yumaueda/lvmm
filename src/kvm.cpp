@@ -8,7 +8,6 @@
 
 #include <cpufeat.hpp>
 #include <kvm.hpp>
-#include <ioctl.hpp>
 
 
 int KVM::kvmCreateVM(VM** ptr_vm, uint64_t ram_size, int vcpu_num) {
@@ -30,9 +29,9 @@ int KVM::kvmCreateVM(VM** ptr_vm, uint64_t ram_size, int vcpu_num) {
         std::cerr << "KVM_CREATE_VM failed" << std::endl;
         return -1;
     } else {
-        std::cout << "KVM_CREATE_VM vmfd: " << ret << std::endl;
+        std::cout << "KVM_CREATE_VM fd: " << ret << std::endl;
         std::cout << "KMV.kvmCreateVM() ram_size: " << ram_size << std::endl;
-        *ptr_vm = new VM(*this, ret, ram_size, vcpu_num);
+        *ptr_vm = new VM(ret, *this, ram_size, vcpu_num);
     }
 
     return ret;
@@ -73,18 +72,13 @@ void KVM::kvmCapCheck() {
 }
 
 
-KVM::KVM() {
+KVM::KVM(int fd) : BaseClass(fd) {
         std::cout << "Constructing KVM..." << std::endl;
 
         // Check VMX/SVM
         if (!cpuSupportsVM())
             throw std::runtime_error(std::string(__func__) + ": VMX/SVM unsupported.");
         std::cout << "VMX/SVM detected." << std::endl;
-
-        // Open sysfd
-        if ((fd = open(dev_kvm, O_RDWR)) < 0)
-            throw std::runtime_error(std::string(__func__) + ": Could not open " + dev_kvm + ".");
-        std::cout << "KVM.fd: " << fd << std::endl;
 
         // API version check
         std::cout << "KVM_API_VERSION from linux header: " << KVM_API_VERSION << std::endl;

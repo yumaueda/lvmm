@@ -7,13 +7,17 @@
 #include <vm.hpp>
 
 
-VM::VM(KVM& kvm, int vmfd, const uint64_t ram_size, const int vcpu_num)\
-        : kvm(kvm), vmfd(vmfd), ram_size(ram_size), vcpu_num(vcpu_num)
+VM::VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num)\
+        : BaseClass(vm_fd), kvm(kvm), ram_size(ram_size), vcpu_num(vcpu_num)
 {
     std::cout << "Constructing VM..." << std::endl;
     vcpus = NULL;
     errno = 0;
     int r;
+
+    // Currently we only assumes the case where unrestricted_guest == 1
+    // SET_TSS
+    // SET_IDENTITY_MAP
 
     /*
      * Create VIOAPIC, VPIC.
@@ -21,11 +25,11 @@ VM::VM(KVM& kvm, int vmfd, const uint64_t ram_size, const int vcpu_num)\
      * GSI00-15 -> IOAPIC/PIC
      * GIS16-23 -> IOAPIC
      */
-    r = ioctl(vmfd, KVM_CREATE_IRQCHIP);
+    r = ioctl(fd, KVM_CREATE_IRQCHIP);
     if (r < 0)
         std::cerr << "KVM_CREATE_IRQCHIP failed" << std::endl;
         // exception!
-    r = ioctl(vmfd, KVM_CREATE_PIT2, &this->pit_config);
+    r = ioctl(fd, KVM_CREATE_PIT2, &this->pit_config);
     if (r < 0)
         std::cerr << "KVM_CREATE_PIT2 failed" << std::endl;
         // exception!
@@ -52,13 +56,13 @@ VM::VM(KVM& kvm, int vmfd, const uint64_t ram_size, const int vcpu_num)\
     vcpus = new Vcpu*[vcpu_num];
 
     for (int i = 0; i < vcpu_num; i++) {
-        r = ioctl(vmfd, KVM_CREATE_VCPU, i);
+        r = ioctl(fd, KVM_CREATE_VCPU, i);
         if (r < 0) {
             std::cerr << "KVM_CREATE_VCPU failed" << std::endl;
             // exception
         } else {
             std::cout << "KVM_CREATE_VCPU cpuid: " << i << " vcpufd: " << r << std::endl;
-            vcpus[i] = new Vcpu(*this, i, r);
+            vcpus[i] = new Vcpu(r, *this, i);
         }
     }
 
@@ -82,9 +86,9 @@ VM::~VM() {
         else
             std::cout << "munmapped VM.ram_start" << std::endl;
     }
-    if (this->vmfd >= 0) {
-        close(this->vmfd);
-        std::cout << "closed VM.vmfd" << std::endl;
+    if (this->fd >= 0) {
+        close(this->fd);
+        std::cout << "closed VM.fd" << std::endl;
     }
 
 }
