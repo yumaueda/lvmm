@@ -2,6 +2,8 @@
 #define VCPU_HPP
 
 
+#include <linux/kvm.h>
+
 #include <baseclass.hpp>
 #include <kvm.hpp>
 #include <vm.hpp>
@@ -23,10 +25,6 @@ struct vcpu_regs {
     // and so on...
 };
 
-struct vcpu_run {
-    uint64_t dummy;
-};
-
 class Vcpu : public BaseClass {
     public:
         explicit Vcpu(int vcpu_fd, VM& vm, int cpu_id);
@@ -38,7 +36,7 @@ class Vcpu : public BaseClass {
     private:
         VM& vm;
         const int cpu_id;
-        struct vcpu_run* vcpu_run;
+        struct kvm_run* run;
 };
 
 

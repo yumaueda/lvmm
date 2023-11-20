@@ -39,7 +39,8 @@ VM::VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num)\
     ram_start = NULL;
     ram_page_size = getpagesize();
     // FIX? 32_BIT_GAP and mprotect(PROT_NONE)?
-    ram_start = mmap(NULL, ram_size, (PROT_READ|PROT_WRITE), (MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE), -1, 0);
+    ram_start = mmap(NULL, ram_size, (PROT_READ|PROT_WRITE)\
+            , (MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE), -1, 0);
     if (ram_start == MAP_FAILED) {
         std::cerr << "mmap failed: " << std::strerror(errno) << std::endl;
         std::cerr << "VM.ram_size: " << ram_size << std::endl;
@@ -47,7 +48,8 @@ VM::VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num)\
     } else {
         std::cout << "RAM mapped. VM.ram_start: " << ram_start << std::endl;
         if (madvise(ram_start, ram_size, MADV_MERGEABLE) < 0)
-            std::cerr << "madvise failed: " << std::strerror(errno) << std::endl;
+            std::cerr << "madvise failed: "\
+                << std::strerror(errno) << std::endl;
     }
 
 

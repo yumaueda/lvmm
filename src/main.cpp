@@ -9,6 +9,15 @@
 #include <vcpu.hpp>
 
 int main(void) {
+    // SuperMigrator Class is needed
+    // - SuperMigrator.cfg
+    //      - disk_path
+    //      - initrd_path
+    //      , etc.
+    // - SuperMigrator.Init()
+    // - SuperMigrator.Setup()?
+    // - SuperMigrator.Boot()
+
     int r;
     if ((r = open(DEV_KVM, O_RDWR)) < 0)
         std::cout<< (std::string(__func__) + ": Could not open " + DEV_KVM + ".") << std::endl;
