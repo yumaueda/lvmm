@@ -4,7 +4,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-
 #include <kvm.hpp>
 #include <vm.hpp>
 #include <vcpu.hpp>

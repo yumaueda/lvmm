@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <sys/ioctl.h>
 #include <unistd.h>
 
 

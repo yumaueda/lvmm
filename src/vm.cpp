@@ -25,11 +25,11 @@ VM::VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num)\
      * GSI00-15 -> IOAPIC/PIC
      * GIS16-23 -> IOAPIC
      */
-    r = ioctl(fd, KVM_CREATE_IRQCHIP);
+    r = kvmIoctl(KVM_CREATE_IRQCHIP);
     if (r < 0)
         std::cerr << "KVM_CREATE_IRQCHIP failed" << std::endl;
         // exception!
-    r = ioctl(fd, KVM_CREATE_PIT2, &this->pit_config);
+    r = kvmIoctl(KVM_CREATE_PIT2, &this->pit_config);
     if (r < 0)
         std::cerr << "KVM_CREATE_PIT2 failed" << std::endl;
         // exception!
@@ -56,7 +56,7 @@ VM::VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num)\
     vcpus = new Vcpu*[vcpu_num];
 
     for (int i = 0; i < vcpu_num; i++) {
-        r = ioctl(fd, KVM_CREATE_VCPU, i);
+        r = kvmIoctl(KVM_CREATE_VCPU, i);
         if (r < 0) {
             std::cerr << "KVM_CREATE_VCPU failed" << std::endl;
             // exception

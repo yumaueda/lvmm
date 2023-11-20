@@ -2,8 +2,6 @@
 #define KVM_HPP
 
 
-#include <sys/ioctl.h>
-
 #include <linux/kvm.h>
 
 #include <baseclass.hpp>
