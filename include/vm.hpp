@@ -19,7 +19,8 @@ class Vcpu;
 
 class VM : public BaseClass {
     public:
-        explicit VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num);
+        explicit VM(int vm_fd, KVM& kvm\
+                , const uint64_t ram_size, const int vcpu_num);
         ~VM();
 
         KVM& kvm;
@@ -27,11 +28,15 @@ class VM : public BaseClass {
     private:
         int fd;
         Vcpu **vcpus;
-        static constexpr const struct kvm_pit_config pit_config = {.flags = KVM_PIT_SPEAKER_DUMMY, .pad = {0}};
+        static constexpr const kvm_pit_config pit_config = {
+            .flags = KVM_PIT_SPEAKER_DUMMY,
+            .pad = {0},
+        };
         const uint64_t ram_size;  // in bytes
         void* ram_start;
         int ram_page_size;
         const int vcpu_num;
+        kvm_userspace_memory_region user_memory_region;
 };
 
 #endif  // VM_HPP

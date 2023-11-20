@@ -1,8 +1,11 @@
+#include <cstdint>
 #include <cstring>
 #include <cerrno>
 #include <iostream>
 #include <sys/mman.h>
 #include <unistd.h>
+
+#include <linux/kvm.h>
 
 #include <vm.hpp>
 
@@ -15,9 +18,10 @@ VM::VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num)\
     errno = 0;
     int r;
 
-    // Currently we only assumes the case where unrestricted_guest == 1
-    // SET_TSS
-    // SET_IDENTITY_MAP
+    // Currently we only assumes the case where unrestricted_guest == 1.
+    // So we won't call following APIs:
+    // - KVM_SET_TSS
+    // - KVM_SET_IDENTITY_MAP
 
     /*
      * Create VIOAPIC, VPIC.
@@ -29,7 +33,7 @@ VM::VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num)\
     if (r < 0)
         std::cerr << "KVM_CREATE_IRQCHIP failed" << std::endl;
         // exception!
-    r = kvmIoctl(KVM_CREATE_PIT2, &this->pit_config);
+    r = kvmIoctl(KVM_CREATE_PIT2, &pit_config);
     if (r < 0)
         std::cerr << "KVM_CREATE_PIT2 failed" << std::endl;
         // exception!
@@ -37,8 +41,6 @@ VM::VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num)\
     // RAM
     // not caring about hugetlbpage
     ram_start = NULL;
-    ram_page_size = getpagesize();
-    // FIX? 32_BIT_GAP and mprotect(PROT_NONE)?
     ram_start = mmap(NULL, ram_size, (PROT_READ|PROT_WRITE)\
             , (MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE), -1, 0);
     if (ram_start == MAP_FAILED) {
@@ -51,6 +53,9 @@ VM::VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num)\
             std::cerr << "madvise failed: "\
                 << std::strerror(errno) << std::endl;
     }
+
+    ram_page_size = getpagesize();
+
 
 
     // vCPU(s)
@@ -68,6 +73,17 @@ VM::VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num)\
         }
     }
 
+    // We don't implement membank yet. So there's a limitation of ram_size!
+    user_memory_region = {
+        .slot = 0,
+        .flags = 0,
+        .guest_phys_addr = 0,
+        .memory_size = ram_size,
+        .userspace_addr = reinterpret_cast<uint64_t>(ram_start),
+        // RECOMMENDED: userspace_addr[0:20] == guest_phys_addr[0:20]
+    };
+    std::cout << "&user_memory_region: " << &user_memory_region << std::endl;
+    r = kvmIoctl(KVM_SET_USER_MEMORY_REGION, &user_memory_region);
 
 }
 

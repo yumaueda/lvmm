@@ -16,6 +16,7 @@ Vcpu::Vcpu(int vcpu_fd, VM& vm, int cpu_id)
         std::cerr << "mmap failed: " << std::strerror(errno) << std::endl;
         std::cerr << "Vcpu.vm.kvm.mmap_size: " << vm.kvm.mmap_size << std::endl;
     } else {
+        std::cout << "Vcpu.run(kvm_run) mapped: fd=" << fd << " mmap_size=" << vm.kvm.mmap_size << std::endl;
         std::cout << "Vcpu.run: " << run << std::endl;
     }
 }

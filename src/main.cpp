@@ -26,7 +26,8 @@ int main(void) {
     KVM *kvm = new KVM(r);
     VM *vm;
 
-    const uint64_t ram_size = static_cast<uint64_t>(8) << 30;
+    // We don't implement membank yet. So there's a limitation of ram_size!
+    const uint64_t ram_size = static_cast<uint64_t>(1) << 30;
     const int vcpu_num = 2;
 
     std::cout << "main() ram_size: " << ram_size << std::endl;

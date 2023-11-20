@@ -3,6 +3,7 @@
 
 
 #include <cstring>
+#include <cerrno>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -17,6 +18,7 @@ class BaseClass {
 
         template<typename... kvmIoctlArgs>
         int kvmIoctl(unsigned long request, kvmIoctlArgs... args) {
+            errno = 0;
             int r = ioctl(fd, request, args...);
             std::ostringstream args_oss;
             args_oss << fd << ',' << request;
