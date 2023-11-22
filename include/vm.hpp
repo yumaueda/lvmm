@@ -19,11 +19,8 @@ class Vcpu;
 
 class VM : public BaseClass {
     public:
-        explicit VM(int vm_fd, KVM& kvm\
-                , const uint64_t ram_size, const int vcpu_num);
+        explicit VM(int vm_fd, const uint64_t ram_size, const int vcpu_num, int mmap_size);
         ~VM();
-
-        KVM& kvm;
 
     private:
         int fd;

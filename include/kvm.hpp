@@ -18,18 +18,15 @@ class KVM : public BaseClass {
         explicit KVM(int fd);
         ~KVM();
 
-        int mmap_size;
 
         int kvmCreateVM(VM** ptr_vm, uint64_t ram_size, int vcpu_num);
-
-    protected:
-        int fd;
 
     private:
         void kvmCapCheck();
 
         // KVM state
         int api_ver;
+        int mmap_size;
         // CAP
         int immediate_exit;
         int nr_slots, nr_as;

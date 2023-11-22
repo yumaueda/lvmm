@@ -31,7 +31,7 @@ int KVM::kvmCreateVM(VM** ptr_vm, uint64_t ram_size, int vcpu_num) {
     } else {
         std::cout << "KVM_CREATE_VM fd: " << ret << std::endl;
         std::cout << "KMV.kvmCreateVM() ram_size: " << ram_size << std::endl;
-        *ptr_vm = new VM(ret, *this, ram_size, vcpu_num);
+        *ptr_vm = new VM(ret, ram_size, vcpu_num, mmap_size);
     }
 
     return ret;
@@ -82,7 +82,7 @@ KVM::KVM(int fd) : BaseClass(fd) {
 
         // API version check
         std::cout << "KVM_API_VERSION from linux header: " << KVM_API_VERSION << std::endl;
-        api_ver = ioctl(fd, KVM_GET_API_VERSION, 0);
+        api_ver = kvmIoctl(KVM_GET_API_VERSION, 0);
 
         if (api_ver < KVM_API_VERSION)
             if (api_ver < 0)
@@ -98,8 +98,7 @@ KVM::KVM(int fd) : BaseClass(fd) {
         kvmCapCheck();  // there should be return value and exception system
 
 
-        mmap_size = ioctl(fd, KVM_GET_VCPU_MMAP_SIZE, 0);
-        if (mmap_size < 0)
+        mmap_size = kvmIoctl(KVM_GET_VCPU_MMAP_SIZE, 0);
         std::cout << "mmap_size: " << mmap_size << std::endl;
 }
 

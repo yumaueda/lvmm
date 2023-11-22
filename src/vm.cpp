@@ -7,11 +7,12 @@
 
 #include <linux/kvm.h>
 
+#include <bios.hpp>
 #include <vm.hpp>
 
 
-VM::VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num)\
-        : BaseClass(vm_fd), kvm(kvm), ram_size(ram_size), vcpu_num(vcpu_num)
+VM::VM(int vm_fd, const uint64_t ram_size, const int vcpu_num, int mmap_size)\
+        : BaseClass(vm_fd), ram_size(ram_size), vcpu_num(vcpu_num)
 {
     std::cout << "Constructing VM..." << std::endl;
     vcpus = NULL;
@@ -69,7 +70,7 @@ VM::VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num)\
             // exception
         } else {
             std::cout << "KVM_CREATE_VCPU cpuid: " << i << " vcpufd: " << r << std::endl;
-            vcpus[i] = new Vcpu(r, *this, i);
+            vcpus[i] = new Vcpu(r, i, mmap_size);
         }
     }
 
@@ -85,6 +86,9 @@ VM::VM(int vm_fd, KVM& kvm, const uint64_t ram_size, const int vcpu_num)\
     std::cout << "&user_memory_region: " << &user_memory_region << std::endl;
     r = kvmIoctl(KVM_SET_USER_MEMORY_REGION, &user_memory_region);
 
+    ebda ebda_data = gen_ebda(vcpu_num);
+    std::cout << "ebda_data.fps.checksum: " << ebda_data.fps.checksum+0<< std::endl;
+    std::cout << "ebda_data.ctable.checksum: " << ebda_data.ctable.checksum+0 << std::endl;
 }
 
 VM::~VM() {
