@@ -55,7 +55,7 @@ struct mpfps {
     uint32_t phys_addr_ptr;
     uint8_t  length = MPFPS_LENGTH;
     uint8_t  spec_rev = MPFPS_SPEC_REV_1_4;
-    uint8_t  checksum;
+    uint8_t  checksum = 0;
     uint8_t  feat_info_byte_1 = MPFPS_FEAT_CTPRESENT;
     uint8_t  feat_info_byte_2 = MPFPS_FEAT_VIRTWIRE;
     uint8_t  feat_info_byte_3 = 0;
@@ -80,7 +80,7 @@ struct mpctable {
     uint32_t signature = MPCTABLE_INTEL_SIGNATURE;
     uint16_t length = MPCTABLE_LENGTH;
     uint8_t  spec_rev = MPCTABLE_SPEC_REV_1_4;
-    uint8_t  checksum;
+    uint8_t  checksum = 0;
     uint64_t oem_id = MPCTABLE_OEM_ID;
     uint8_t  prod_id[12] = { 0 };
     uint32_t oem_table_ptr = 0;

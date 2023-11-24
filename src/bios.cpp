@@ -30,6 +30,7 @@ ebda gen_ebda(const int vcpu_num) {
     std::cout << std::string(__func__) << " called" << std::endl;
     ebda ebda_ret;
 
+    // checksum is initialized to zero. check bios.hpp
     ebda_ret.fps.phys_addr_ptr = EBDA_START + 0x40;
     ebda_ret.fps.checksum = mp_gen_checksum(&ebda_ret.fps);
 
