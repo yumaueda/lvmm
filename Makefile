@@ -5,8 +5,10 @@ CFLAGS_DEBUG := -g -DMONITOR_IOCTL
 
 
 googletest_dir := gtest
-googletest_tar_gz = $(googletest_dir)/v1.14.0.tar.gz
 googletest_tar_gz_url := https://github.com/google/googletest/archive/refs/tags/v1.14.0.tar.gz
+googletest_build_flags := -DBUILD_GMOCK=OFF
+
+googletest_tar_gz = $(googletest_dir)/v1.14.0.tar.gz
 googletest_release = $(googletest_dir)/googletest-1.14.0
 googletest_build_dir = $(googletest_release)/build
 
@@ -37,7 +39,7 @@ $(googletest_release): $(googletest_tar_gz)
 
 googletest_lib: $(googletest_release)
 	mkdir $(googletest_build_dir)
-	cd $(googletest_build_dir) && cmake ..
+	cd $(googletest_build_dir) && cmake .. $(googletest_build_flags)
 	$(MAKE) -C $(googletest_build_dir)
 
 
