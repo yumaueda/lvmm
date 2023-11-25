@@ -44,6 +44,7 @@ $(gtest_tar_gz): $(gtest_dir)
 	wget $(gtest_tar_gz_url) -O $@
 
 $(gtest_release): $(gtest_tar_gz)
+	# FIXME: Broken deps in gtest_lib
 	$(AR) -C $(dir $<) -xf $<
 
 $(gtest_lib): $(gtest_release)
@@ -52,7 +53,7 @@ $(gtest_lib): $(gtest_release)
 	$(MAKE) -C $(gtest_build_dir)
 
 unittest: $(test_src) $(tested_src) $(gtest_lib)
-	# NEVER CHANGE THE POSITION OF ARGUMENTS!!!
+	# ***NEVER CHANGE THE POSITION OF ARGUMENTS IN THE MAKEFILE AS WE ARE LINKING STATIC LIBS***
 	$(CXX) $(CFLAGS) $(test_src) $(tested_src) $(CFLAGS_TEST) -o $@
 
 unittest_debug: $(test_src) $(tested_src) $(gtest_lib)
