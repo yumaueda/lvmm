@@ -19,7 +19,7 @@ test_dir := test
 test_src = $(wildcard $(test_dir)/*.cpp)
 tested_src = $(addprefix src/, $(filter-out gtest_main.cpp, $(notdir $(test_src))))
 test_lib = $(subst lib,, $(basename $(notdir $(gtest_lib)))) pthread
-CFLAGS_TEST = $(addprefix -l, $(test_lib)) -I $(gtest_include_dir) -L $(gtest_lib_dir)
+CFLAGS_TEST = $(addprefix -l, $(test_lib)) -I $(gtest_include_dir) -L $(gtest_lib_dir) -DUNITTEST
 
 
 include = include/baseclass.hpp \
@@ -55,6 +55,10 @@ unittest: $(test_src) $(tested_src) $(gtest_lib)
 	# NEVER CHANGE THE POSITION OF ARGUMENTS!!!
 	$(CXX) $(CFLAGS) $(test_src) $(tested_src) $(CFLAGS_TEST) -o $@
 
+unittest_debug: $(test_src) $(tested_src) $(gtest_lib)
+	# NEVER CHANGE THE POSITION OF ARGUMENTS!!!
+	$(CXX) $(CFLAGS) $(test_src) $(tested_src) $(CFLAGS_TEST) -o $@ -g
+
 initramfs: scripts/geninitramfs.bash
 	./scripts/geninitramfs.bash
 
@@ -68,4 +72,4 @@ supermigrator: $(src) $(include)
 .PHONY: clean
 
 clean:
-	rm -f supermigrator supermigrator_debug initramfs unittest
+	rm -f supermigrator supermigrator_debug initramfs unittest unittest_debug
