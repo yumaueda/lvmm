@@ -5,6 +5,7 @@
 #include <cstdint>
 
 
+constexpr int      EBDA_PADDING_SIZE = 16*3;
 constexpr uint32_t EBDA_START = 0x0009'fc00;
 constexpr uint32_t APIC_BASE  = 0xfee0'0000;
 
@@ -118,7 +119,7 @@ bool is_mp_checksum_valid(MpPtr mpptr) {
 #pragma pack(1)
 struct ebda {  // why do we need padding?
                // just making fps.phys_addr_ptr = EBDA_START + 0x10 seems to be fine
-    uint8_t  padding[16*3];  // 48Bytes
+    uint8_t  padding[EBDA_PADDING_SIZE];  // 48Bytes
     mpfps    fps;     // 16Bytes
     mpctable ctable;  // (44+20*MP_MAX_VCPU_NUM)Bytes
 };

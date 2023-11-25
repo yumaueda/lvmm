@@ -1,4 +1,5 @@
 #include <bios.hpp>
+// we should re-implement some function as the member of an object
 
 
 static inline
