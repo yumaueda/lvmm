@@ -45,9 +45,14 @@ constexpr uint8_t  MPCTE_ENTRY_TYPE_PROC     = 0;
 constexpr uint8_t  MPCTE_PROC_APIC_VER       = 0x14;
 constexpr uint8_t  MPCTE_PROC_CPUFLAGS_EN    = 0b0000'0001;
 constexpr uint8_t  MPCTE_PROC_CPUFLAGS_BP    = 0b0000'0010;
-constexpr uint32_t MPCTE_PROC_FEATFLAGS_FPU  = 0b0000'0000'0000'0000'0000'0000'0000'0001;
-constexpr uint32_t MPCTE_PROC_FEATFLAGS_APIC = 0b0000'0000'0000'0000'0000'0010'0000'0000;
-
+constexpr uint32_t MPCTE_PROC_FEATFLAGS_FPU  = \
+    0b0000'0000'0000'0000'0000'0000'0000'0001;
+constexpr uint32_t MPCTE_PROC_FEATFLAGS_APIC = \
+    0b0000'0000'0000'0000'0000'0010'0000'0000;
+// Temporary!
+// We should fill the cpu signature field w/ a value returned by CPUID.
+constexpr uint32_t MPCTE_PROC_CPUSIGNATURE   = \
+    0b0000'0000'0000'0000'0000'0110'0000'0000;
 
 #pragma pack(1)
 struct mpfps {
@@ -70,7 +75,7 @@ struct mpctable_processor_entry {
     uint8_t  local_apic_ver = MPCTE_PROC_APIC_VER;
     uint8_t  cpu_flags;
     uint32_t cpu_sig;
-    uint32_t feat_flags;
+    uint32_t feat_flags = MPCTE_PROC_FEATFLAGS_FPU | MPCTE_PROC_FEATFLAGS_APIC;
     uint64_t reserved = 0;
 };
 
@@ -111,7 +116,9 @@ bool is_mp_checksum_valid(MpPtr mpptr) {
 
 
 #pragma pack(1)
-struct ebda {  // need padding?
+struct ebda {  // why do we need padding?
+               // just making fps.phys_addr_ptr = EBDA_START + 0x10 seems to be fine
+    uint8_t  padding[16*3];  // 48Bytes
     mpfps    fps;     // 16Bytes
     mpctable ctable;  // (44+20*MP_MAX_VCPU_NUM)Bytes
 };
