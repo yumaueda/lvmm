@@ -1,33 +1,27 @@
-#include <iostream>//debug
-
 #include <bios.hpp>
 
 
+static inline uint8_t _mp_calc_checksum_inline(uint8_t *byteptr_mp, int length) {
+    uint8_t checksum = 0;
+    for (int i = 0; i < length; ++i)
+        checksum += *byteptr_mp++;
+    return checksum;
+}
+
 template <>
 uint8_t mp_calc_checksum<mpfps*>(mpfps* mpptr) {
-    uint8_t checksum = 0;
     uint8_t* byteptr_fps = reinterpret_cast<uint8_t*>(mpptr);
-
-    for (int i = 0; i < MPFPS_LENGTH*PARAGRAPH_SIZE; ++i)
-        checksum += *byteptr_fps++;
-
-    return checksum;
+    return _mp_calc_checksum_inline(byteptr_fps, MPFPS_LENGTH*PARAGRAPH_SIZE);
 }
 
 template <>
 uint8_t mp_calc_checksum<mpctable*>(mpctable* mpptr) {
-    uint8_t checksum = 0;
     uint8_t* byteptr_ctable = reinterpret_cast<uint8_t*>(mpptr);
-
-    for (int i = 0; i < MPCTABLE_LENGTH; ++i)
-        checksum += *byteptr_ctable++;
-
-    return checksum;
+    return _mp_calc_checksum_inline(byteptr_ctable, MPCTABLE_LENGTH);
 }
 
 
 ebda gen_ebda(const int vcpu_num) {
-    std::cout << std::string(__func__) << " called" << std::endl;
     ebda ebda_ret;
 
     // checksum is initialized to zero. check bios.hpp
