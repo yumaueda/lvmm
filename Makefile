@@ -72,4 +72,4 @@ supermigrator: $(src) $(include)
 .PHONY: clean
 
 clean:
-	rm -f supermigrator supermigrator_debug initramfs unittest unittest_debug
+	rm -f supermigrator supermigrator_debug initramfs unittest unittest_debug peda-session-* .gdb_history
