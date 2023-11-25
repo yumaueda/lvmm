@@ -71,10 +71,10 @@ struct mpfps {
 #pragma pack(1)
 struct mpctable_processor_entry {
     uint8_t  entry_type = MPCTE_ENTRY_TYPE_PROC;
-    uint8_t  local_apic_id;
+    uint8_t  local_apic_id = 0;
     uint8_t  local_apic_ver = MPCTE_PROC_APIC_VER;
-    uint8_t  cpu_flags;
-    uint32_t cpu_sig;
+    uint8_t  cpu_flags = 0;
+    uint32_t cpu_sig = 0;
     uint32_t feat_flags = MPCTE_PROC_FEATFLAGS_FPU | MPCTE_PROC_FEATFLAGS_APIC;
     uint64_t reserved = 0;
 };
@@ -123,6 +123,12 @@ struct ebda {  // why do we need padding?
     mpctable ctable;  // (44+20*MP_MAX_VCPU_NUM)Bytes
 };
 
+#ifdef UNITTEST
+void processor_entry_init(
+        mpctable_processor_entry entry_array[],
+        const int vcpu_num
+);
+#endif  // UNITTEST
 
 ebda gen_ebda(const int vcpu_num);
 

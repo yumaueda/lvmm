@@ -21,6 +21,19 @@ uint8_t mp_calc_checksum<mpctable*>(mpctable* mpptr) {
     return _mp_calc_checksum_inline(byteptr_ctable, MPCTABLE_LENGTH);
 }
 
+#ifndef UNITTEST
+static
+#endif
+void processor_entry_init(mpctable_processor_entry* entry_array, const int vcpu_num) {
+    for (int i = 0; i < vcpu_num; ++i) {
+        entry_array[i].local_apic_id = i;
+        entry_array[i].cpu_flags |= MPCTE_PROC_CPUFLAGS_EN;
+        entry_array[i].cpu_flags |= i==0 ? \
+            MPCTE_PROC_CPUFLAGS_BP : 0;
+        entry_array[i].cpu_sig = MPCTE_PROC_CPUSIGNATURE;
+    }
+}
+
 ebda gen_ebda(const int vcpu_num) {
     ebda ebda_ret;
 
@@ -30,14 +43,9 @@ ebda gen_ebda(const int vcpu_num) {
     ebda_ret.fps.phys_addr_ptr = EBDA_START + 0x40;
     ebda_ret.fps.checksum = mp_gen_checksum(&ebda_ret.fps);
 
-    for (uint8_t i=0; i<vcpu_num; ++i) {
-        ebda_ret.ctable.processor_entry[i].local_apic_id = i;
-        ebda_ret.ctable.processor_entry[i].cpu_flags |= MPCTE_PROC_CPUFLAGS_EN;
-        ebda_ret.ctable.processor_entry[i].cpu_flags |= i==0 ? \
-            MPCTE_PROC_CPUFLAGS_BP : 0;
-        ebda_ret.ctable.processor_entry[i].cpu_sig = MPCTE_PROC_CPUSIGNATURE;
-    }
-
+    // we don't initialize all memory regions of the array processor_entry
+    // since there's no need to do so.
+    processor_entry_init(ebda_ret.ctable.processor_entry, vcpu_num);
     ebda_ret.ctable.checksum = mp_gen_checksum(&ebda_ret.ctable);
 
     return ebda_ret;
