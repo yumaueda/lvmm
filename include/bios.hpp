@@ -104,6 +104,11 @@ uint8_t mp_gen_checksum(MpPtr mpptr) {
     return (mp_calc_checksum(mpptr) ^ 0xFF) + 0x1;
 }
 
+template <typename MpPtr>
+bool is_mp_checksum_valid(MpPtr mpptr) {
+    return !mp_calc_checksum(mpptr);
+};
+
 
 #pragma pack(1)
 struct ebda {  // need padding?
