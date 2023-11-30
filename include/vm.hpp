@@ -37,6 +37,7 @@ class VM : public BaseClass {
         ~VM();
 
         int initMachine();
+        int initBoot();
 
     private:
         KVM& kvm;

@@ -74,6 +74,16 @@ int VM::initMachine() {
 }
 
 
+int VM::initBoot() {
+    ebda ebda_data = gen_ebda(vm_conf.vcpu_num);
+    std::cout << "ebda_data.fps.checksum: "
+        << ebda_data.fps.checksum+0 << std::endl;
+    std::cout << "ebda_data.ctable.checksum: "
+        << ebda_data.ctable.checksum+0 << std::endl;
+    return 0;
+}
+
+
 VM::VM(int vm_fd, KVM& kvm, vm_config vm_conf)\
         : BaseClass(vm_fd), kvm(kvm), vm_conf(vm_conf) {
     std::cout << "Constructing VM..." << std::endl;
@@ -88,10 +98,6 @@ VM::VM(int vm_fd, KVM& kvm, vm_config vm_conf)\
     // - GIS16-23 -> IOAPIC
     kvmIoctlCtor(KVM_CREATE_IRQCHIP);
     kvmIoctlCtor(KVM_CREATE_PIT2, &pit_config);
-
-    //ebda ebda_data = gen_ebda(vm_conf.vcpu_num);
-    //std::cout << "ebda_data.fps.checksum: " << ebda_data.fps.checksum+0 << std::endl;
-    //std::cout << "ebda_data.ctable.checksum: " << ebda_data.ctable.checksum+0 << std::endl;
 }
 
 

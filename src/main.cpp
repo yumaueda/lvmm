@@ -61,6 +61,11 @@ int main() {
         goto out_vm;
     }
 
+    r = vm->initBoot();
+    if (r < 0) {
+        std::cerr << "vm->initBoot() failed" << std::endl;
+        goto out_vm;
+    }
 
 
     // init end?
