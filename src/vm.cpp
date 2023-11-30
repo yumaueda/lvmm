@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <cerrno>
@@ -66,7 +67,7 @@ int VM::createVcpu() {
 
 int VM::initMachine() {
     int r;
-    for (const InitMachineFunc e : init_machine_func) {
+    for (const InitMachineFunc e : initmachine_func) {
         r = (this->*e)();
         if (r < 0)
             return r;
@@ -75,12 +76,33 @@ int VM::initMachine() {
 }
 
 
-int VM::initBoot() {
+int VM::initBoot(bootloader_write_param param) {
+    ebda* ebda_start = reinterpret_cast<ebda*>((
+                reinterpret_cast<uint8_t*>(ram_start)+EBDA_START));
     ebda ebda_data = gen_ebda(vm_conf.vcpu_num);
+
     std::cout << "ebda_data.fps.checksum: "
         << ebda_data.fps.checksum+0 << std::endl;
     std::cout << "ebda_data.ctable.checksum: "
         << ebda_data.ctable.checksum+0 << std::endl;
+
+    if (is_mp_checksum_valid(&ebda_data.fps)) {
+        std::cout << "ebda_data.fps.checksum is valid." << std::endl;
+    } else {
+        std::cerr << "ebda_data.fps.checksum corrupted" << std::endl;
+    }
+
+    if (is_mp_checksum_valid(&ebda_data.ctable)) {
+        std::cout << "ebda_data.ctable.checksum is valid." << std::endl;
+    } else {
+        std::cerr << "ebda_data.ctable.checksum corrupted" << std::endl;
+    }
+
+    std::copy_n(&ebda_data, 1, ebda_start);
+    std::cout << "ebda_data copied to " << ebda_start << std::endl;
+
+    std::cout << &param << std::endl;
+
     return 0;
 }
 

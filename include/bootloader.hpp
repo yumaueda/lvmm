@@ -6,10 +6,10 @@
 
 #pragma pack(1)
 struct bootloader_write_param {
-    uint16_t vid_mode;
-    uint8_t  type_of_loader;
-    uint32_t ramdisk_image;
-    uint32_t ramdisk_size;
+    const uint16_t vid_mode       = 0xffff;
+    const uint8_t  type_of_loader = 0xff;
+    const uint32_t ramdisk_image  = 0x0f00'0000;
+    uint32_t       ramdisk_size   = 0;
 };
 
 

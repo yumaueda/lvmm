@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <linux/kvm.h>
 #include <baseclass.hpp>
+#include <bootloader.hpp>
 #include <kvm.hpp>
 #include <vcpu.hpp>
 
@@ -38,7 +39,7 @@ class VM : public BaseClass {
         ~VM();
 
         int initMachine();
-        int initBoot();
+        int initBoot(bootloader_write_param param = {});
 
     private:
         KVM& kvm;
