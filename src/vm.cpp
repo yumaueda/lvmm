@@ -46,21 +46,33 @@ int VM::setUserMemRegion() {
 }
 
 
-void VM::createVcpu() {
+int VM::createVcpu() {
     int r;
-
     vcpus = (Vcpu*)operator new[](vm_conf.vcpu_num*sizeof(Vcpu));
-    std::cout << "vcpus: " << vcpus << std::endl;
 
     for (int i = 0; i < vm_conf.vcpu_num; i++) {
         r = kvmIoctl(KVM_CREATE_VCPU, i);
         if (r < 0) {
-            std::cerr << "KVM_CREATE_VCPU failed" << std::endl;
-            return;
+            std::cerr << "KVM_CREATE_VCPU failed." << std::endl;
+            return -errno;
         }
+        // error handling
         new(&vcpus[i]) Vcpu(r, kvm, i);
         std::cout << "&vcpus[" << i << "]: " << &vcpus[i] << std::endl;
     }
+
+    return 0;
+}
+
+
+int VM::initMachine() {
+    int r;
+    for (int i = 0; i < static_cast<int>(sizeof(init_machine_func)); ++i) {
+        r = (this->*init_machine_func[i])();
+        if (r < 0)
+            return r;
+    }
+    return 0;
 }
 
 

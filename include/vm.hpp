@@ -9,8 +9,9 @@
 #include <vcpu.hpp>
 
 
-class KVM;
 class Vcpu;
+class VM;
+class KVM;
 
 
 struct vm_config {
@@ -27,14 +28,15 @@ struct vm_config {
      */
 };
 
+typedef int (VM::*InitMachineFunc)();
+
+
 class VM : public BaseClass {
     public:
         explicit VM(int vm_fd, KVM& kvm, vm_config config);
         ~VM();
 
-        int allocGuestRAM();
-        int setUserMemRegion();
-        void createVcpu();
+        int initMachine();
 
     private:
         KVM& kvm;
@@ -45,9 +47,20 @@ class VM : public BaseClass {
             .pad = {0},
         };
 
+        const InitMachineFunc init_machine_func[3] = {
+            &VM::allocGuestRAM,
+            &VM::setUserMemRegion,
+            &VM::createVcpu,
+        };
+
         Vcpu* vcpus = static_cast<Vcpu*>(nullptr);
         void* ram_start = nullptr;
         kvm_userspace_memory_region user_memory_region;  // TMP
+
+        // initMachine()
+        int allocGuestRAM();
+        int setUserMemRegion();
+        int createVcpu();
 };
 
 

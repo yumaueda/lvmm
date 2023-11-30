@@ -55,19 +55,13 @@ int main() {
         goto out_kvm;
     }
 
-    r = vm->allocGuestRAM();
+    r = vm->initMachine();
     if (r < 0) {
-        std::cerr << "vm->allocGuestRAM() failed" << std::endl;
+        std::cerr << "vm->initMachine() failed" << std::endl;
         goto out_vm;
     }
 
-    r = vm->setUserMemRegion();
-    if (r < 0) {
-        std::cerr << "vm->setUserMemRegion() failed" << std::endl;
-        goto out_vm;
-    }
 
-    vm->createVcpu();
 
     // init end?
 
