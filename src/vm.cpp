@@ -12,11 +12,9 @@
 
 int VM::allocGuestRAM() {
     // not caring about hugetlbpage
-    std::cout << vm_conf.ram_size << std::endl;
     ram_start = mmap(NULL, vm_conf.ram_size, (PROT_READ|PROT_WRITE),
                         (MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE), -1, 0);
     if (ram_start == MAP_FAILED) {
-        //std::cout << vm_conf.ram_size << " " << vm_conf.vcpu_num << std::endl;
         std::cerr << "mmap failed: " << std::strerror(errno) << std::endl;
         return -errno;
     }
@@ -33,8 +31,8 @@ int VM::allocGuestRAM() {
 int VM::setUserMemRegion() {
     // TMP implementation
     // We don't implement membank yet. So there's a limitation of ram_size!
+    // RECOMMENDED: userspace_addr[0:20] == guest_phys_addr[0:20]
     user_memory_region = {
-        // RECOMMENDED: userspace_addr[0:20] == guest_phys_addr[0:20]
         .slot = 0,
         .flags = 0,
         .guest_phys_addr = 0,
