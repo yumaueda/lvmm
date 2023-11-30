@@ -17,7 +17,7 @@ gtest_include_dir = $(gtest_release)/googletest/include
 
 test_dir := test
 test_src = $(wildcard $(test_dir)/*.cpp)
-tested_src = $(addprefix src/, $(filter-out gtest_main.cpp, $(notdir $(test_src))))
+tested_src = $(filter-out src/main.cpp, $(src))
 test_lib = $(subst lib,, $(basename $(notdir $(gtest_lib)))) pthread
 CFLAGS_TEST = $(addprefix -l, $(test_lib)) -I $(gtest_include_dir) -L $(gtest_lib_dir) -DUNITTEST
 
