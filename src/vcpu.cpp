@@ -15,13 +15,12 @@ Vcpu::Vcpu(int vcpu_fd, KVM& kvm, int cpu_id)
     run = static_cast<struct kvm_run*>(mmap(NULL, kvm.mmap_size
                 , PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
     if (run == MAP_FAILED) {
-        perror(("Vcpu::" + std::string(__func__) + ": mmap").c_str());
+        perror("Vcpu.run: mmap");
         // The type of exception should be detailed.
-        throw std::runtime_error(std::string(__func__)
+        throw std::runtime_error("Vcpu::" + std::string(__func__)
                 + ": " + strerror(errno));
     } else {
-        std::cout << "Vcpu::" << __func__ << ": Vcpu.run mmaped: "
-            << run << std::endl;
+        std::cout << "Vcpu.run mmaped: " << run << std::endl;
     }
 
     std::cout << "Constructed Vcpu." << std::endl;
