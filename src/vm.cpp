@@ -76,7 +76,7 @@ int VM::initMachine() {
 }
 
 
-int VM::initBoot(bootloader_write_param param) {
+int VM::initRAM(bootloader_write_param param) {
     ebda* ebda_start = reinterpret_cast<ebda*>((
                 reinterpret_cast<uint8_t*>(ram_start)+EBDA_START));
     ebda ebda_data = gen_ebda(vm_conf.vcpu_num);

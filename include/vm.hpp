@@ -39,7 +39,7 @@ class VM : public BaseClass {
         ~VM();
 
         int initMachine();
-        int initBoot(bootloader_write_param param = {});
+        int initRAM(bootloader_write_param param = {});
 
     private:
         KVM& kvm;
