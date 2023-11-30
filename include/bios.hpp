@@ -118,7 +118,8 @@ bool is_mp_checksum_valid(MpPtr mpptr) {
 
 #pragma pack(1)
 struct ebda {  // why do we need padding?
-               // just making fps.phys_addr_ptr = EBDA_START + 0x10 seems to be fine
+               // just making
+               // fps.phys_addr_ptr = EBDA_START + 0x10 seems to be fine
     uint8_t  padding[EBDA_PADDING_SIZE];  // 48Bytes
     mpfps    fps;     // 16Bytes
     mpctable ctable;  // (44+20*MP_MAX_VCPU_NUM)Bytes
