@@ -70,7 +70,10 @@ supermigrator: $(src) $(include)
 	$(CXX) $(CFLAGS) $(src) -o $@
 
 
-.PHONY: clean
+.PHONY: clean tag
 
 clean:
-	rm -f supermigrator supermigrator_debug initramfs unittest unittest_debug peda-session-* .gdb_history
+	rm -f supermigrator supermigrator_debug initramfs unittest unittest_debug peda-session-* .gdb_history tags
+
+tag:
+	ctags -R .
