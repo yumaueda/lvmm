@@ -34,7 +34,7 @@ class Vcpu : public BaseClass {
     private:
         KVM& kvm;
         const int cpu_id;
-        kvm_run* run;
+        kvm_run* run = static_cast<kvm_run*>(nullptr);
 };
 
 

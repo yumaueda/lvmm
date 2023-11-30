@@ -1,7 +1,10 @@
 #ifndef KVM_HPP
 #define KVM_HPP
 
+#include <cstdio>
+#include <cerrno>
 #include <fcntl.h>
+#include <iostream>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <linux/kvm.h>
@@ -42,10 +45,13 @@ class KVM : public BaseClass {
 
         static int getKVMFD(){
             int r;
+
             if ((r = open(DEV_KVM, O_RDWR)) < 0) {
-                std::cout<< (std::string(__func__) + ": Could not open " + DEV_KVM + ".") << std::endl;
+                perror(("KVM::" + std::string(__func__) + ": open").c_str());
                 return -errno;
             }
+            std::cout << "KVM::" << __func__ << ": " << r << std::endl;
+
             return r;
         };
 

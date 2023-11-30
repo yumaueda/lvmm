@@ -49,17 +49,16 @@ class BaseClass {
                 std::string args_str = args_oss.str();
 
                 if (monitor_ioctl)
-                    std::cout << (std::string(__func__)\
-                        + ": ioctl("\
-                        + args_str\
-                        + "): "\
-                        + strerror(errno)) << std::endl;
+                    std::cout << (std::string(__func__)
+                            + ": ioctl("
+                            + args_str + "): "
+                            + strerror(errno))
+                        << std::endl;
 
                 if (r < 0 && raise_exception)
-                        throw std::runtime_error(std::string(__func__)\
-                                + ": ioctl("\
-                                + args_str\
-                                + "): "\
+                        // The type of exception should be detailed.
+                        throw std::runtime_error(std::string(__func__)
+                                + ": ioctl(" + args_str + "): "
                                 + strerror(errno));
             }
 

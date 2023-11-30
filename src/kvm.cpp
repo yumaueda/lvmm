@@ -1,4 +1,5 @@
 #include <cerrno>
+#include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
@@ -12,19 +13,27 @@ int KVM::kvmCreateVM(VM** ptr_vm, vm_config vm_conf) {
 
     // should consider about current cpu usage
     if (vm_conf.vcpu_num > cap.hard_vcpus_limit) {
-        std::cerr << "vm_conf.vcpu_num exceeds kvm.hard_vcpus_limit!" << std::endl;
-        return -1;
+        std::cerr
+            << "KVM::" << __func__ << ": "
+            << "KVM.vm_conf.vcpu_num " << vm_conf.vcpu_num
+            << "exceeds KVM.hard_vcpus_limit " << cap.hard_vcpus_limit
+            << std::endl;
+        return -EINVAL;
     } else if (vm_conf.vcpu_num > cap.soft_vcpus_limit) {
-        std::cout << "WARNING: vm_conf.vcpu_num exceeds kvm.soft_vcpus_limit!" << std::endl;
+        std::cout
+            << "KVM::" << __func__ << ": "
+            << "WARNING: KVM.vm_conf.vcpu_num " << vm_conf.vcpu_num
+            << "exceeds kvm.soft_vcpus_limit " << cap.soft_vcpus_limit
+            << std::endl;
     }
 
     r = kvmIoctl(KVM_CREATE_VM, 0);
 
     if (r < 0) {
-        std::cerr << "KVM_CREATE_VM failed." << std::endl;
-        return -1;
+        perror(("KVM::" + std::string(__func__) + ": kvmIoctl").c_str());
+        return r;
     } else {
-        std::cout << "KVM_CREATE_VM fd: " << r << std::endl;
+        std::cout << "KVM::" << __func__ << ": " << r << std::endl;
         *ptr_vm = new VM(r, *this, vm_conf);
     }
 
@@ -39,24 +48,28 @@ int KVM::kvmCapCheck() {
 
     if (cap.nr_slots == 0) {
         cap.nr_slots = 32;
-        std::cout << "KVM.nr_slots is unspecified. Using the default value: "
+        std::cout << "KVM::" << __func__ << ": "
+            << "KVM.nr_slots is unspecified. Using the default value: "
             << cap.nr_slots << '\n';
     }
 
     if (cap.nr_as == 0) {
-        std::cout << "KVM_CAP_NR_MEMSLOTS unsupported."
+        std::cout << "KVM::" << __func__ << ": "
+            << "KVM_CAP_NR_MEMSLOTS unsupported."
             << " Assume nr_slots = 1."<< '\n';
         cap.nr_as = 1;
     }
 
     if (cap.soft_vcpus_limit == 0) {
-        std::cout << "KVM_CAP_NR_VCPUS unsupported."
+        std::cout << "KVM::" << __func__ << ": "
+            << "KVM_CAP_NR_VCPUS unsupported."
             << " Assume soft_vcpus_limit = 4." << '\n';
         cap.soft_vcpus_limit = 4;
     }
 
     if (cap.hard_vcpus_limit == 0) {
-        std::cout << "KVM_CAP_MAX_VCPUS unsupported. "
+        std::cout << "KVM::" << __func__ << ": "
+            << "KVM_CAP_MAX_VCPUS unsupported. "
             << "Assume KVM.hard_vcpus_limit = KVM.soft_vcpus_limit." << '\n';
     }
 
