@@ -2,99 +2,94 @@
 #include <cstring>
 #include <cerrno>
 #include <iostream>
+#include <new>
 #include <sys/mman.h>
 #include <unistd.h>
-
 #include <linux/kvm.h>
-
 #include <bios.hpp>
 #include <vm.hpp>
 
 
-VM::VM(int vm_fd, const uint64_t ram_size, const int vcpu_num, int mmap_size)\
-        : BaseClass(vm_fd), ram_size(ram_size), vcpu_num(vcpu_num)
-{
-    std::cout << "Constructing VM..." << std::endl;
-    vcpus = NULL;
-    errno = 0;
+int VM::allocGuestRAM() {
+    // not caring about hugetlbpage
+    std::cout << vm_conf.ram_size << std::endl;
+    ram_start = mmap(NULL, vm_conf.ram_size, (PROT_READ|PROT_WRITE),
+                        (MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE), -1, 0);
+    if (ram_start == MAP_FAILED) {
+        //std::cout << vm_conf.ram_size << " " << vm_conf.vcpu_num << std::endl;
+        std::cerr << "mmap failed: " << std::strerror(errno) << std::endl;
+        return -errno;
+    }
+
+    if (madvise(ram_start, vm_conf.ram_size, MADV_MERGEABLE) < 0) {
+        std::cerr << "madvise failed: " << std::strerror(errno) << std::endl;
+        return -errno;
+    }
+
+    return 0;
+}
+
+
+int VM::setUserMemRegion() {
+    // TMP implementation
+    // We don't implement membank yet. So there's a limitation of ram_size!
+    user_memory_region = {
+        // RECOMMENDED: userspace_addr[0:20] == guest_phys_addr[0:20]
+        .slot = 0,
+        .flags = 0,
+        .guest_phys_addr = 0,
+        .memory_size = vm_conf.ram_size,
+        .userspace_addr = reinterpret_cast<uint64_t>(ram_start),
+    };
+
+    return kvmIoctl(KVM_SET_USER_MEMORY_REGION, &user_memory_region);
+}
+
+
+void VM::createVcpu() {
     int r;
+
+    vcpus = (Vcpu*)operator new[](vm_conf.vcpu_num*sizeof(Vcpu));
+    std::cout << "vcpus: " << vcpus << std::endl;
+
+    for (int i = 0; i < vm_conf.vcpu_num; i++) {
+        r = kvmIoctl(KVM_CREATE_VCPU, i);
+        if (r < 0) {
+            std::cerr << "KVM_CREATE_VCPU failed" << std::endl;
+            return;
+        }
+        new(&vcpus[i]) Vcpu(r, kvm, i);
+        std::cout << "&vcpus[" << i << "]: " << &vcpus[i] << std::endl;
+    }
+}
+
+
+VM::VM(int vm_fd, KVM& kvm, vm_config vm_conf)\
+        : BaseClass(vm_fd), kvm(kvm), vm_conf(vm_conf) {
+    std::cout << "Constructing VM..." << std::endl;
 
     // Currently we only assumes the case where unrestricted_guest == 1.
     // So we won't call following APIs:
     // - KVM_SET_TSS
     // - KVM_SET_IDENTITY_MAP
 
-    /*
-     * Create VIOAPIC, VPIC.
-     * Set up future vCPUs to use them as a local APIC.
-     * GSI00-15 -> IOAPIC/PIC
-     * GIS16-23 -> IOAPIC
-     */
-    r = kvmIoctl(KVM_CREATE_IRQCHIP);
-    if (r < 0)
-        std::cerr << "KVM_CREATE_IRQCHIP failed" << std::endl;
-        // exception!
-    r = kvmIoctl(KVM_CREATE_PIT2, &pit_config);
-    if (r < 0)
-        std::cerr << "KVM_CREATE_PIT2 failed" << std::endl;
-        // exception!
+    // Create VIOAPIC, VPIC. Set up future vCPUs to use them as a local APIC.
+    // - GSI00-15 -> IOAPIC/PIC
+    // - GIS16-23 -> IOAPIC
+    kvmIoctlCtor(KVM_CREATE_IRQCHIP);
+    kvmIoctlCtor(KVM_CREATE_PIT2, &pit_config);
 
-    // RAM
-    // not caring about hugetlbpage
-    ram_start = NULL;
-    ram_start = mmap(NULL, ram_size, (PROT_READ|PROT_WRITE)\
-            , (MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE), -1, 0);
-    if (ram_start == MAP_FAILED) {
-        std::cerr << "mmap failed: " << std::strerror(errno) << std::endl;
-        std::cerr << "VM.ram_size: " << ram_size << std::endl;
-        // exception!
-    } else {
-        std::cout << "RAM mapped. VM.ram_start: " << ram_start << std::endl;
-        if (madvise(ram_start, ram_size, MADV_MERGEABLE) < 0)
-            std::cerr << "madvise failed: "\
-                << std::strerror(errno) << std::endl;
-    }
-
-    ram_page_size = getpagesize();
-
-
-
-    // vCPU(s)
-    // some kind of kvm_vcpu struct is needed. will be implemented soon
-    vcpus = new Vcpu*[vcpu_num];
-
-    for (int i = 0; i < vcpu_num; i++) {
-        r = kvmIoctl(KVM_CREATE_VCPU, i);
-        if (r < 0) {
-            std::cerr << "KVM_CREATE_VCPU failed" << std::endl;
-            // exception
-        } else {
-            std::cout << "KVM_CREATE_VCPU cpuid: " << i << " vcpufd: " << r << std::endl;
-            vcpus[i] = new Vcpu(r, i, mmap_size);
-        }
-    }
-
-    // We don't implement membank yet. So there's a limitation of ram_size!
-    user_memory_region = {
-        .slot = 0,
-        .flags = 0,
-        .guest_phys_addr = 0,
-        .memory_size = ram_size,
-        .userspace_addr = reinterpret_cast<uint64_t>(ram_start),
-        // RECOMMENDED: userspace_addr[0:20] == guest_phys_addr[0:20]
-    };
-    std::cout << "&user_memory_region: " << &user_memory_region << std::endl;
-    r = kvmIoctl(KVM_SET_USER_MEMORY_REGION, &user_memory_region);
-
-    ebda ebda_data = gen_ebda(vcpu_num);
-    std::cout << "ebda_data.fps.checksum: " << ebda_data.fps.checksum+0<< std::endl;
-    std::cout << "ebda_data.ctable.checksum: " << ebda_data.ctable.checksum+0 << std::endl;
+    //ebda ebda_data = gen_ebda(vm_conf.vcpu_num);
+    //std::cout << "ebda_data.fps.checksum: " << ebda_data.fps.checksum+0 << std::endl;
+    //std::cout << "ebda_data.ctable.checksum: " << ebda_data.ctable.checksum+0 << std::endl;
 }
 
+
 VM::~VM() {
+    /*
     errno = 0;
     std::cout << "Destructing VM..." << std::endl;
-    for (int i = 0; i < this->vcpu_num; i++) {
+    for (int i = 0; i < vm_conf.vcpu_num; i++) {
         std::cout << "deleted VM.vcpus[i]" << std::endl;
         delete vcpus[i];
     }
@@ -102,15 +97,15 @@ VM::~VM() {
         std::cout << "deleted VM.vcpus" << std::endl;
         delete vcpus;
     }
-    if (this->ram_start != NULL) {
-        if (munmap(this->ram_start, this->ram_size) < 0)
+    if (ram_start != NULL) {
+        if (munmap(ram_start, vm_conf.ram_size) < 0)
             std::cerr << "munmap VM.ram_start failed: " << std::strerror(errno) << std::endl;
         else
             std::cout << "munmapped VM.ram_start" << std::endl;
     }
-    if (this->fd >= 0) {
-        close(this->fd);
+    if (fd >= 0) {
+        close(fd);
         std::cout << "closed VM.fd" << std::endl;
     }
-
+    */
 }

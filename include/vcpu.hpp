@@ -5,6 +5,10 @@
 #include <linux/kvm.h>
 
 #include <baseclass.hpp>
+#include <kvm.hpp>
+
+
+class KVM;
 
 
 struct vcpu_sregs {
@@ -21,16 +25,16 @@ struct vcpu_regs {
 
 class Vcpu : public BaseClass {
     public:
-        explicit Vcpu(int vcpu_fd, int cpu_id, int mmap_size);
+        explicit Vcpu(int vcpu_fd, KVM& kvm, int cpu_id);
         ~Vcpu();
 
-        struct vcpu_regs regs;
-        struct vcpu_sregs sresg;
+        vcpu_regs regs;
+        vcpu_sregs sregs;
 
     private:
+        KVM& kvm;
         const int cpu_id;
-        const int mmap_size;
-        struct kvm_run* run;
+        kvm_run* run;
 };
 
 

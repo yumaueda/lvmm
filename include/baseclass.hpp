@@ -18,34 +18,53 @@ class BaseClass {
 
         template<typename... kvmIoctlArgs>
         int kvmIoctl(unsigned long request, kvmIoctlArgs... args) {
-            errno = 0;
-            int r = ioctl(fd, request, args...);
-            std::ostringstream args_oss;
-            args_oss << fd << ',' << request;
-            ((args_oss << ',' << args), ...);
-            std::string args_str = args_oss.str();
+            return _kvmIoctl(request, false, args...);
+        }
 
-#ifdef MONITOR_IOCTL
-            std::cout << (std::string(__func__)\
-                + ": ioctl("\
-                + args_str\
-                + "): "\
-                + strerror(errno)) << std::endl;
-#endif  // MONITOR_IOCTL
-
-            if (r < 0) {
-                r = -errno;
-                throw std::runtime_error(std::string(__func__)\
-                        + ": ioctl("\
-                        + args_str\
-                        + "): "\
-                        + strerror(errno));
-            }
-            return r;
+        template<typename... kvmIoctlArgs>
+        void kvmIoctlCtor(unsigned long request, kvmIoctlArgs... args) {
+            _kvmIoctl(request, true, args...);
         }
 
     protected:
         int fd;
+
+    private:
+        template<typename... kvmIoctlArgs>
+        int _kvmIoctl(unsigned long request,
+                bool raise_exception, kvmIoctlArgs... args) {
+#ifdef MONITOR_IOCTL
+            constexpr bool monitor_ioctl = true;
+#else
+            constexpr bool monitor_ioctl = false;
+#endif  // MONITOR_IOCTL
+
+            int r = ioctl(fd, request, args...);
+            errno = 0;
+
+            if (monitor_ioctl || raise_exception) {
+                std::ostringstream args_oss;
+                args_oss << fd << ',' << request;
+                ((args_oss << ',' << args), ...);
+                std::string args_str = args_oss.str();
+
+                if (monitor_ioctl)
+                    std::cout << (std::string(__func__)\
+                        + ": ioctl("\
+                        + args_str\
+                        + "): "\
+                        + strerror(errno)) << std::endl;
+
+                if (r < 0 && raise_exception)
+                        throw std::runtime_error(std::string(__func__)\
+                                + ": ioctl("\
+                                + args_str\
+                                + "): "\
+                                + strerror(errno));
+            }
+
+            return r < 0 ? -errno : r;
+        }
 };
 
 

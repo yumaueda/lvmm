@@ -2,6 +2,7 @@
 #define CPUFEAT_HPP
 
 
+#include <cstdint>
 #include <stdexcept>
 
 

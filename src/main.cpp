@@ -1,4 +1,6 @@
+#include <fstream>
 #include <iostream>
+#include <string>
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -8,42 +10,81 @@
 #include <vm.hpp>
 #include <vcpu.hpp>
 
-int main(void) {
+
+// BZIMAGE_PATH = "bzImage";
+// INITRAMFS_PATH = "initramfs";
+
+
+int main() {
     // SuperMigrator Class is needed
     // - SuperMigrator.cfg
     //      - disk_path
-    //      - initrd_path
+    //      - initramfs_path
     //      , etc.
     // - SuperMigrator.Init()
     // - SuperMigrator.Setup()?
     // - SuperMigrator.Boot()
 
-    int r;
-    if ((r = open(DEV_KVM, O_RDWR)) < 0)
-        std::cout<< (std::string(__func__) + ": Could not open " + DEV_KVM + ".") << std::endl;
+    // init start?
+    int  r;
+    KVM* kvm;
+    VM*  vm;
+    // We don't implement membank yet. So there's a limitation of ram_size!
+    vm_config vm_conf {
+        .vcpu_num = 2,
+        .ram_size = static_cast<uint64_t>(1) << 30,
+        .kernel_path = "",
+        .initramfs_path = "",
+    };
+
+    r = KVM::getKVMFD();
+    if (r < 0) {
+        std::cerr << "KVM::getKVMFD() failed" << std::endl;
+        goto out;
+    }
     std::cout << "KVM.fd: " << r << std::endl;
 
-    KVM *kvm = new KVM(r);
-    VM *vm;
+    kvm = new KVM(r);
 
-    // We don't implement membank yet. So there's a limitation of ram_size!
-    const uint64_t ram_size = static_cast<uint64_t>(1) << 30;
-    const int vcpu_num = 2;
 
-    std::cout << "main() ram_size: " << ram_size << std::endl;
-    r = kvm->kvmCreateVM(&vm, ram_size, vcpu_num);
+    std::cout << "vm_conf.vcpu_num: " << vm_conf.vcpu_num << std::endl;
+
+    r = kvm->kvmCreateVM(&vm, vm_conf);
     if (r < 0) {
         std::cerr << "kvm->kvmCreateVM() failed" << std::endl;
-        goto out_tmp;
+        goto out_kvm;
     }
 
+    r = vm->allocGuestRAM();
+    if (r < 0) {
+        std::cerr << "vm->allocGuestRAM() failed" << std::endl;
+        goto out_vm;
+    }
+
+    r = vm->setUserMemRegion();
+    if (r < 0) {
+        std::cerr << "vm->setUserMemRegion() failed" << std::endl;
+        goto out_vm;
+    }
+
+    vm->createVcpu();
+
+    // init end?
+
+    // load linux/initramfs here (pvh?)
+
 
     delete vm;
     delete kvm;
+
     return 0;
 
+out_vm:
     delete vm;
-out_tmp:
+
+out_kvm:
     delete kvm;
+
+out:
     return -1;
 }
