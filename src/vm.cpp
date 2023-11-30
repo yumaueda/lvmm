@@ -66,7 +66,7 @@ int VM::createVcpu() {
 
 int VM::initMachine() {
     int r;
-    for (const InitMachineFunc e : init_machine_func) {  // wrong end value!!!
+    for (const InitMachineFunc e : init_machine_func) {
         r = (this->*e)();
         if (r < 0)
             return r;
