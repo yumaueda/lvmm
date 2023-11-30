@@ -22,8 +22,8 @@ class BaseClass {
         }
 
         template<typename... kvmIoctlArgs>
-        void kvmIoctlCtor(unsigned long request, kvmIoctlArgs... args) {
-            _kvmIoctl(request, true, args...);
+        int kvmIoctlCtor(unsigned long request, kvmIoctlArgs... args) {
+            return _kvmIoctl(request, true, args...);
         }
 
     protected:
