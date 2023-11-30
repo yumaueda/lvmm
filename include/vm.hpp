@@ -28,6 +28,7 @@ struct vm_config {
      */
 };
 
+constexpr const int INITMACHINE_FUNC_NUM = 3;
 typedef int (VM::*InitMachineFunc)();
 
 
@@ -48,7 +49,7 @@ class VM : public BaseClass {
             .pad = {0},
         };
 
-        const InitMachineFunc init_machine_func[3] = {
+        const InitMachineFunc initmachine_func[INITMACHINE_FUNC_NUM] = {
             &VM::allocGuestRAM,
             &VM::setUserMemRegion,
             &VM::createVcpu,
