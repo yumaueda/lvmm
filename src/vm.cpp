@@ -65,8 +65,8 @@ int VM::createVcpu() {
 
 int VM::initMachine() {
     int r;
-    for (int i = 0; i < static_cast<int>(sizeof(init_machine_func)); ++i) {
-        r = (this->*init_machine_func[i])();
+    for (const InitMachineFunc e : init_machine_func) {  // wrong end value!!!
+        r = (this->*e)();
         if (r < 0)
             return r;
     }
