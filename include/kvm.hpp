@@ -15,6 +15,14 @@ class VM;
 
 constexpr const char* DEV_KVM = "/dev/kvm";
 
+constexpr const int KVM_CAP_CHECK[] = {
+    KVM_CAP_IMMEDIATE_EXIT,
+    KVM_CAP_NR_MEMSLOTS,
+    KVM_CAP_MULTI_ADDRESS_SPACE,
+    KVM_CAP_NR_VCPUS,
+    KVM_CAP_MAX_VCPUS,
+    KVM_CAP_COALESCED_MMIO,
+};
 
 struct kvm_cap {
     int immediate_exit;
@@ -47,7 +55,7 @@ class KVM : public BaseClass {
         int api_ver;
         kvm_cap cap;
 
-        void kvmCapCheck();
+        int kvmCapCheck();
 };
 
 

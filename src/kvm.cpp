@@ -33,13 +33,19 @@ int KVM::kvmCreateVM(VM** ptr_vm, vm_config vm_conf) {
     return ret;
 }
 
-void KVM::kvmCapCheck() {
-    cap.immediate_exit = kvmIoctl(KVM_CHECK_EXTENSION, KVM_CAP_IMMEDIATE_EXIT);
-    cap.nr_slots = kvmIoctl(KVM_CHECK_EXTENSION, KVM_CAP_NR_MEMSLOTS);
-    cap.nr_as = kvmIoctl(KVM_CHECK_EXTENSION, KVM_CAP_MULTI_ADDRESS_SPACE);
-    cap.soft_vcpus_limit = kvmIoctl(KVM_CHECK_EXTENSION, KVM_CAP_NR_VCPUS);
-    cap.hard_vcpus_limit = kvmIoctl(KVM_CHECK_EXTENSION, KVM_CAP_MAX_VCPUS);
-    cap.coalesced_mmio = kvmIoctl(KVM_CHECK_EXTENSION, KVM_CAP_COALESCED_MMIO);
+int KVM::kvmCapCheck() {
+    int* kvm_cap_ptr = reinterpret_cast<int*>(&cap);
+
+    for (const int e : KVM_CAP_CHECK) {
+        *kvm_cap_ptr = kvmIoctl(KVM_CHECK_EXTENSION, e);
+        if (*kvm_cap_ptr < 0) {
+            std::cerr
+                << "kvmCapCheck failed: KVM_CAP_CHECK[" << e << "]"
+                << std::endl;
+            return *kvm_cap_ptr;
+        }
+        kvm_cap_ptr++;
+    }
 
     if (cap.nr_slots == 0) {
         cap.nr_slots = 32;
@@ -52,21 +58,19 @@ void KVM::kvmCapCheck() {
             << " Assume nr_slots = 1."<< '\n';
         cap.nr_as = 1;
     }
-    std::cout << "KVM.nr_as: " << cap.nr_as << std::endl;
 
     if (cap.soft_vcpus_limit == 0) {
         std::cout << "KVM_CAP_NR_VCPUS unsupported."
             << " Assume soft_vcpus_limit = 4." << '\n';
         cap.soft_vcpus_limit = 4;
     }
+
     if (cap.hard_vcpus_limit == 0) {
         std::cout << "KVM_CAP_MAX_VCPUS unsupported. "
             << "Assume KVM.hard_vcpus_limit = KVM.soft_vcpus_limit." << '\n';
     }
-    std::cout << "KVM.soft_vcpus_limit: " << cap.soft_vcpus_limit << '\n';
-    std::cout << "KVM.hard_vcpus_limit: " << cap.hard_vcpus_limit << '\n';
 
-    std::cout << "KVM.coalesced_mmio: " << cap.coalesced_mmio << std::endl;
+    return EXIT_SUCCESS;
 }
 
 
