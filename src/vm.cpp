@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <linux/kvm.h>
 #include <bios.hpp>
+#include <bootloader.hpp>
 #include <vm.hpp>
 
 
