@@ -6,6 +6,7 @@
 #include <cerrno>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -27,7 +28,7 @@ class BaseClass {
         }
 
     protected:
-        int fd;
+        int fd = -1;
 
     private:
         template<typename... kvmIoctlArgs>

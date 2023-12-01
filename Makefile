@@ -23,7 +23,7 @@ CFLAGS_TEST = $(addprefix -l, $(test_lib)) -I $(gtest_include_dir) -L $(gtest_li
 
 
 include = include/baseclass.hpp \
-		  include/bios.hpp \
+		  include/boot.hpp \
 		  include/cpufeat.hpp \
 		  include/kvm.hpp \
 		  include/vcpu.hpp \
@@ -31,7 +31,7 @@ include = include/baseclass.hpp \
 
 src = src/main.cpp \
 	  src/baseclass.cpp \
-	  src/bios.cpp \
+	  src/boot.cpp \
 	  src/kvm.cpp \
 	  src/vm.cpp \
 	  src/vcpu.cpp

@@ -2,19 +2,23 @@
 #define BIOS_HPP
 
 
+#include <algorithm>
 #include <cstdint>
+#include <cstdio>
+#include <fstream>
+#include <ios>
+#include <iostream>
+#include <string>
 
 
-constexpr int      EBDA_PADDING_SIZE = 16*3;
-constexpr uint32_t EBDA_START = 0x0009'fc00;
-constexpr uint32_t APIC_BASE  = 0xfee0'0000;
+constexpr int      EBDA_PADDING_SIZE         = 16*3;
+constexpr uint32_t EBDA_START                = 0x0009'fc00;
+constexpr uint32_t APIC_BASE                 = 0xfee0'0000;
 
 constexpr int      MP_MAX_VCPU_NUM           = 32;
-
 constexpr uint8_t  MP_SPEC_REV_1_4           = 4;
 
-// _MP_
-constexpr int      PARAGRAPH_SIZE            = 16;
+constexpr int      PARAGRAPH_SIZE            = 16;  // _MP_
 constexpr uint32_t MPFPS_INTEL_SIGNATURE     = static_cast<uint32_t>('_')<<24|\
                                                static_cast<uint32_t>('P')<<16|\
                                                static_cast<uint32_t>('M')<< 8|\
@@ -24,8 +28,9 @@ constexpr uint8_t  MPFPS_SPEC_REV_1_4        = MP_SPEC_REV_1_4;
 constexpr uint8_t  MPFPS_FEAT_CTPRESENT      = 0;
 constexpr uint8_t  MPFPS_FEAT_VIRTWIRE       = 0;
 
-constexpr uint16_t  MPCTABLE_HEADER_LENGTH   = 44;
-constexpr uint16_t  MPCTABLE_LENGTH          = MPCTABLE_HEADER_LENGTH+20*MP_MAX_VCPU_NUM;
+constexpr uint16_t MPCTABLE_HEADER_LENGTH    = 44;
+constexpr uint16_t MPCTABLE_LENGTH           = MPCTABLE_HEADER_LENGTH
+                                                +20*MP_MAX_VCPU_NUM;
 // PCMP
 constexpr uint32_t MPCTABLE_INTEL_SIGNATURE  = static_cast<uint32_t>('P')<<24|\
                                                static_cast<uint32_t>('M')<<16|\
@@ -54,6 +59,22 @@ constexpr uint32_t MPCTE_PROC_FEATFLAGS_APIC = \
 // We should fill the cpu signature field w/ a value returned by CPUID.
 constexpr uint32_t MPCTE_PROC_CPUSIGNATURE   = \
     0b0000'0000'0000'0000'0000'0110'0000'0000;
+
+constexpr int      ELF_MAGIC_SIZE            = 4;
+constexpr char     ELF_MAGIC[ELF_MAGIC_SIZE] = {0x7f, 'E', 'L', 'F'};
+
+#pragma pack(1)
+struct boot_header {
+    const uint16_t vid_mode       = 0xffff;
+    const uint8_t  type_of_loader = 0xff;
+    const uint32_t ramdisk_image  = 0x0f00'0000;
+    uint32_t       ramdisk_size   = 0;
+};
+
+#pragma pack(1)
+struct command_line {
+    uint8_t dummy = 0x00;
+};
 
 #pragma pack(1)
 struct mpfps {
@@ -100,10 +121,35 @@ struct mpctable {
     mpctable_processor_entry processor_entry[MP_MAX_VCPU_NUM];
 };
 
+#pragma pack(1)
+struct ebda {  // why do we need padding?
+               // just making
+               // fps.phys_addr_ptr = EBDA_START + 0x10 seems to be fine
+    uint8_t  padding[EBDA_PADDING_SIZE];  // 48Bytes
+    mpfps    fps;     // 16Bytes
+    mpctable ctable;  // (44+20*MP_MAX_VCPU_NUM)Bytes
+};
+
+
+// This func doesn't change the value of the position indicator of kernel.
+static inline bool is_elf(std::ifstream& kernel) {
+    char buf[ELF_MAGIC_SIZE];
+    std::ios::pos_type original_pos = kernel.tellg();
+
+    if (!kernel) {
+        std::cerr << __func__ << ": invalid ifstream given" << std::endl;
+        return false;
+    }
+
+    kernel.seekg(0, std::ios::beg);
+    kernel.read(buf, ELF_MAGIC_SIZE);
+    kernel.seekg(original_pos);
+
+    return std::equal(buf, buf+ELF_MAGIC_SIZE, ELF_MAGIC);
+};
 
 template <typename MpPtr>
 uint8_t mp_calc_checksum(MpPtr mpptr);
-
 
 template <typename MpPtr>
 uint8_t mp_gen_checksum(MpPtr mpptr) {
@@ -113,16 +159,6 @@ uint8_t mp_gen_checksum(MpPtr mpptr) {
 template <typename MpPtr>
 bool is_mp_checksum_valid(MpPtr mpptr) {
     return !mp_calc_checksum(mpptr);
-};
-
-
-#pragma pack(1)
-struct ebda {  // why do we need padding?
-               // just making
-               // fps.phys_addr_ptr = EBDA_START + 0x10 seems to be fine
-    uint8_t  padding[EBDA_PADDING_SIZE];  // 48Bytes
-    mpfps    fps;     // 16Bytes
-    mpctable ctable;  // (44+20*MP_MAX_VCPU_NUM)Bytes
 };
 
 #ifdef UNITTEST

@@ -3,13 +3,15 @@
 #include <cstdio>
 #include <cstring>
 #include <cerrno>
+#include <exception>
 #include <iostream>
 #include <new>
+#include <stdexcept>
+#include <string>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <linux/kvm.h>
-#include <bios.hpp>
-#include <bootloader.hpp>
+#include <boot.hpp>
 #include <vm.hpp>
 
 
@@ -93,7 +95,7 @@ int VM::initMachine() {
 }
 
 
-int VM::initRAM(bootloader_write_param param) {
+int VM::initRAM(boot_header header) {
     ebda* ebda_start = reinterpret_cast<ebda*>((
                 reinterpret_cast<uint8_t*>(ram_start)+EBDA_START));
     ebda ebda_data = gen_ebda(vm_conf.vcpu_num);
@@ -119,7 +121,10 @@ int VM::initRAM(bootloader_write_param param) {
     std::copy_n(&ebda_data, 1, ebda_start);
     std::cout << "ebda_data copied to guest RAM: " << ebda_start << std::endl;
 
-    std::cout << &param << std::endl;
+    std::cout << &header << std::endl;
+
+
+    // poisoning the guest RAM for debugging here
 
     std::cout << "VM::" << __func__ << ": success" << std::endl;
 
@@ -143,6 +148,21 @@ VM::VM(int vm_fd, KVM& kvm, vm_config vm_conf)\
     std::cout << "IRQCHIP created" << std::endl;
     kvmIoctlCtor(KVM_CREATE_PIT2, &pit_config);
     std::cout << "PIT2 created" << std::endl;
+
+    kernel.open(vm_conf.kernel_path, std::ios::in | std::ios::binary);
+    initramfs.open(vm_conf.initramfs_path, std::ios::in | std::ios::binary);
+
+    if (!kernel)
+        throw std::runtime_error("Cloud not open the kernel: "
+                + std::string(vm_conf.kernel_path));
+    if (!initramfs)
+        throw std::runtime_error("Cloud not open the initramfs: "
+                + std::string(vm_conf.initramfs_path));
+
+    if (is_elf(kernel))
+        throw std::runtime_error("VM::"+std::string(__func__)+
+                ": the kernel is elf file");
+    std::cout << "Verified that the kernel is not an elf file" << std::endl;
 
     std::cout << "Constructed VM." << std::endl;
 }

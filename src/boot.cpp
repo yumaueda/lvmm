@@ -1,5 +1,7 @@
-#include <bios.hpp>
-// we should re-implement some function as the member of an object
+#include <boot.hpp>
+
+
+// NOTE: we should re-implement some function as the member of an object
 
 
 static inline
@@ -25,11 +27,12 @@ uint8_t mp_calc_checksum<mpctable*>(mpctable* mpptr) {
 #ifndef UNITTEST
 static
 #endif
-void processor_entry_init(mpctable_processor_entry* entry_array, const int vcpu_num) {
+void processor_entry_init(mpctable_processor_entry* entry_array,
+                            const int vcpu_num) {
     for (int i = 0; i < vcpu_num; ++i) {
         entry_array[i].local_apic_id = i;
         entry_array[i].cpu_flags |= MPCTE_PROC_CPUFLAGS_EN;
-        entry_array[i].cpu_flags |= i==0 ? \
+        entry_array[i].cpu_flags |= i==0 ?
             MPCTE_PROC_CPUFLAGS_BP : 0;
         entry_array[i].cpu_sig = MPCTE_PROC_CPUSIGNATURE;
     }
@@ -38,8 +41,7 @@ void processor_entry_init(mpctable_processor_entry* entry_array, const int vcpu_
 ebda gen_ebda(const int vcpu_num) {
     ebda ebda_ret;
 
-    // checksum is initialized to zero. check bios.hpp
-
+    // checksum is initialized to zero. check boot.hpp
     // see definition of struct ebda
     ebda_ret.fps.phys_addr_ptr = EBDA_START + 0x40;
     ebda_ret.fps.checksum = mp_gen_checksum(&ebda_ret.fps);

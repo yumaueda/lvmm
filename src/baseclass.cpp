@@ -4,4 +4,8 @@
 
 
 BaseClass::BaseClass(int fd) : fd(fd) {}
-BaseClass::~BaseClass() {}
+
+BaseClass::~BaseClass() {
+    if (fd >= 0)
+        close(fd);
+}

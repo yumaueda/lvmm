@@ -3,9 +3,11 @@
 
 
 #include <cstdint>
+#include <iostream>
+#include <fstream>
 #include <linux/kvm.h>
 #include <baseclass.hpp>
-#include <bootloader.hpp>
+#include <boot.hpp>
 #include <kvm.hpp>
 #include <vcpu.hpp>
 
@@ -13,6 +15,9 @@
 class Vcpu;
 class VM;
 class KVM;
+
+
+constexpr const int INITMACHINE_FUNC_NUM = 3;
 
 
 struct vm_config {
@@ -29,7 +34,6 @@ struct vm_config {
      */
 };
 
-constexpr const int INITMACHINE_FUNC_NUM = 3;
 typedef int (VM::*InitMachineFunc)();
 
 
@@ -39,11 +43,12 @@ class VM : public BaseClass {
         ~VM();
 
         int initMachine();
-        int initRAM(bootloader_write_param param = {});
+        int initRAM(boot_header header = {});
 
     private:
         KVM& kvm;
         const vm_config vm_conf;
+        std::ifstream kernel, initramfs;
 
         static constexpr const kvm_pit_config pit_config = {
             .flags = KVM_PIT_SPEAKER_DUMMY,
