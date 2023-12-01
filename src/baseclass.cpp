@@ -6,6 +6,8 @@
 BaseClass::BaseClass(int fd) : fd(fd) {}
 
 BaseClass::~BaseClass() {
-    if (fd >= 0)
+    if (fd >= 0) {
         close(fd);
+        std::cout << "closed: " << fd << std::endl;
+    }
 }
