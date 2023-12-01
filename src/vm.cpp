@@ -38,7 +38,6 @@ int VM::allocGuestRAM() {
     return 0;
 }
 
-
 int VM::setUserMemRegion() {
     // TMP implementation
     // We don't implement membank yet. So there's a limitation of ram_size!
@@ -61,7 +60,6 @@ int VM::setUserMemRegion() {
     return r;
 }
 
-
 int VM::createVcpu() {
     int r;
     vcpus = (Vcpu*)operator new[](vm_conf.vcpu_num*sizeof(Vcpu));
@@ -82,7 +80,6 @@ int VM::createVcpu() {
     return 0;
 }
 
-
 int VM::initMachine() {
     int r;
     for (const InitMachineFunc e : initmachine_func) {
@@ -93,7 +90,6 @@ int VM::initMachine() {
     std::cout << "VM::" << __func__ << ": success" << std::endl;
     return 0;
 }
-
 
 int VM::initRAM(boot_header header) {
     ebda* ebda_start = reinterpret_cast<ebda*>((
@@ -121,16 +117,31 @@ int VM::initRAM(boot_header header) {
     std::copy_n(&ebda_data, 1, ebda_start);
     std::cout << "ebda_data copied to guest RAM: " << ebda_start << std::endl;
 
-    std::cout << &header << std::endl;
+    std::cout << &header << std::endl;  // just for suppressing an error
 
+    // TODO:
+    // -  set virtio-net up (we won't do it for now)
+    // <--- in another func
+    // ---> in this func
+    // 0. poisoning the guest RAM for debugging here
+    // 1. get the size of initramfs and copy it to guest RAM
+    // 2. copy command line to guest RAM. make sure it is null-terminated!
+    // 3. read bootparam header data from kernel
+    // 4. e820 entries
+    // 5. write into bootparam header
+    // 6. copy whole? bootparam into guest RAM
+    // 7. copy protected-mode kernel into guest RAM
+    // <--- in this func
+    // in another func --->
+    // 8. init vCPUs regs
+    // 9. add devs cmos noop
+    // 10. init ioporthandler
 
-    // poisoning the guest RAM for debugging here
 
     std::cout << "VM::" << __func__ << ": success" << std::endl;
 
     return 0;
 }
-
 
 VM::VM(int vm_fd, KVM& kvm, vm_config vm_conf)\
         : BaseClass(vm_fd), kvm(kvm), vm_conf(vm_conf) {
@@ -166,6 +177,5 @@ VM::VM(int vm_fd, KVM& kvm, vm_config vm_conf)\
 
     std::cout << "Constructed VM." << std::endl;
 }
-
 
 VM::~VM() {}
