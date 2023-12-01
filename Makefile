@@ -63,17 +63,17 @@ unittest_debug: $(test_src) $(tested_src) $(gtest_lib)
 initramfs: scripts/geninitramfs.bash
 	./scripts/geninitramfs.bash
 
-supermigrator_debug: $(src) $(include)
+lmigtester_debug: $(src) $(include)
 	$(CXX) $(CFLAGS) $(CFLAGS_DEBUG) -o $@ $(src)
 
-supermigrator: $(src) $(include)
+lmigtester: $(src) $(include)
 	$(CXX) $(CFLAGS) $(src) -o $@
 
 
 .PHONY: clean tag
 
 clean:
-	rm -f supermigrator supermigrator_debug initramfs unittest unittest_debug peda-session-* .gdb_history tags
+	rm -f lmigtester lmigtester_debug initramfs unittest unittest_debug peda-session-* .gdb_history tags
 
 tag:
 	ctags -R .

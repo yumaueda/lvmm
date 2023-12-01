@@ -35,14 +35,14 @@ constexpr uint32_t MPCTABLE_INTEL_SIGNATURE  = static_cast<uint32_t>('P')<<24
                                               |static_cast<uint32_t>('C')<< 8
                                               |static_cast<uint32_t>('P');
 constexpr uint8_t  MPCTABLE_SPEC_REV_1_4     = MP_SPEC_REV_1_4;
-constexpr uint64_t MPCTABLE_OEM_ID           = static_cast<uint64_t>('R')<<56
-                                              |static_cast<uint64_t>('G')<<48
-                                              |static_cast<uint64_t>('I')<<40
-                                              |static_cast<uint64_t>('M')<<32
-                                              |static_cast<uint64_t>('R')<<24
-                                              |static_cast<uint64_t>('P')<<16
-                                              |static_cast<uint64_t>('U')<< 8
-                                              |static_cast<uint64_t>('S')<< 0;
+constexpr uint64_t MPCTABLE_OEM_ID           = static_cast<uint64_t>('T')<<56
+                                              |static_cast<uint64_t>('S')<<48
+                                              |static_cast<uint64_t>('E')<<40
+                                              |static_cast<uint64_t>('T')<<32
+                                              |static_cast<uint64_t>('G')<<24
+                                              |static_cast<uint64_t>('I')<<16
+                                              |static_cast<uint64_t>('M')<< 8
+                                              |static_cast<uint64_t>('L')<< 0;
 constexpr uint8_t  MPCTE_ENTRY_TYPE_PROC     = 0;
 constexpr uint8_t  MPCTE_PROC_APIC_VER       = 0x14;
 constexpr uint8_t  MPCTE_PROC_CPUFLAGS_EN    = 0b0000'0001;
