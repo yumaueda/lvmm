@@ -1,4 +1,5 @@
 supermigrator*
+bzImage
 initramfs
 unittest
 gtest/
