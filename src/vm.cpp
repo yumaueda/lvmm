@@ -95,6 +95,8 @@ int VM::initMachine() {
 int VM::initRAM(boot_header header) {
     ebda* ebda_start = reinterpret_cast<ebda*>((
                 reinterpret_cast<uint8_t*>(ram_start)+EBDA_START));
+    char* ramdisk_image = reinterpret_cast<char*>(ram_start)
+                                +BOOT_RAMDISK_IMAGE;
     uint32_t ramdisk_size;
 
     ebda ebda_data = gen_ebda(vm_conf.vcpu_num);
@@ -143,7 +145,12 @@ int VM::initRAM(boot_header header) {
     // 1
     ramdisk_size = get_ifs_size(initramfs);
     std::cout << "initramfs size: " << ramdisk_size << std::endl;
-
+    if (!initramfs.read(ramdisk_image, ramdisk_size)) {
+        std::cerr << "cannnot read from initramfs" << std::endl;
+        return 1;
+    }
+    std::cout << "initramfs copied to guest RAM: "
+        << static_cast<void*>(ramdisk_image) << std::endl;
 
     std::cout << "VM::" << __func__ << ": success" << std::endl;
 

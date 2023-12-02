@@ -73,7 +73,7 @@ int KVM::kvmCapCheck() {
             << "Assume KVM.hard_vcpus_limit = KVM.soft_vcpus_limit." << '\n';
     }
 
-    return EXIT_SUCCESS;
+    return 0;
 }
 
 KVM::KVM(int fd) : BaseClass(fd) {

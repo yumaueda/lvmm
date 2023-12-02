@@ -11,11 +11,12 @@
 #include <string>
 
 
+constexpr int      PARAGRAPH_SIZE   = 16;
+constexpr uint32_t EBDA_START       = 0x0009'fc00;
+
 constexpr int      EBDA_PADDING_SIZE = 16*3;
-constexpr uint32_t EBDA_START        = 0x0009'fc00;
 constexpr uint32_t APIC_BASE         = 0xfee0'0000;
 
-constexpr int      PARAGRAPH_SIZE = 16;
 
 constexpr int      MP_MAX_VCPU_NUM           = 32;
 constexpr uint8_t  MP_SPEC_REV_1_4           = 4;
