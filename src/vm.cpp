@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <linux/kvm.h>
 #include <boot.hpp>
+#include <util.hpp>
 #include <vm.hpp>
 
 
@@ -94,6 +95,8 @@ int VM::initMachine() {
 int VM::initRAM(boot_header header) {
     ebda* ebda_start = reinterpret_cast<ebda*>((
                 reinterpret_cast<uint8_t*>(ram_start)+EBDA_START));
+    uint32_t ramdisk_size;
+
     ebda ebda_data = gen_ebda(vm_conf.vcpu_num);
 
     std::cout << "ebda generated" << '\n';
@@ -123,7 +126,7 @@ int VM::initRAM(boot_header header) {
     // -  set virtio-net up (we won't do it for now)
     // <--- in another func
     // ---> in this func
-    // 0. poisoning the guest RAM for debugging here
+    // 0. poisoning the guest RAM for debugging here (optional)
     // 1. get the size of initramfs and copy it to guest RAM
     // 2. copy command line to guest RAM. make sure it is null-terminated!
     // 3. read bootparam header data from kernel
@@ -136,6 +139,10 @@ int VM::initRAM(boot_header header) {
     // 8. init vCPUs regs
     // 9. add devs cmos noop
     // 10. init ioporthandler
+
+    // 1
+    ramdisk_size = get_ifs_size(initramfs);
+    std::cout << "initramfs size: " << ramdisk_size << std::endl;
 
 
     std::cout << "VM::" << __func__ << ": success" << std::endl;
@@ -170,7 +177,7 @@ VM::VM(int vm_fd, KVM& kvm, vm_config vm_conf)\
         throw std::runtime_error("Cloud not open the initramfs: "
                 + std::string(vm_conf.initramfs_path));
 
-    if (is_elf(kernel))
+    if (is_kernel_elf(kernel))
         throw std::runtime_error("VM::"+std::string(__func__)+
                 ": the kernel is elf file");
     std::cout << "Verified that the kernel is not an elf file" << std::endl;

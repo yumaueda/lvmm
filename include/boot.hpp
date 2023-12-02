@@ -53,6 +53,7 @@ constexpr uint32_t MPCTE_PROC_FEATFLAGS_APIC = 0x0000'0200;
 // We should fill the cpu signature field w/ a value returned by CPUID.
 constexpr uint32_t MPCTE_PROC_CPUSIGNATURE   = 0x0000'0600;
 
+constexpr uint16_t BOOT_HDR_VID_MODE_NML  = 0xffff;
 constexpr uint16_t BOOT_HDR_BOOT_FLAG     = 0xaaff;
 constexpr uint32_t BOOT_HDR_MAGIC         = static_cast<uint32_t>('S')<<24
                                            |static_cast<uint32_t>('r')<<16
@@ -64,6 +65,7 @@ constexpr uint8_t  BOOT_HDR_LF_KASLR      = 0b0000'0010;  // KI
 constexpr uint8_t  BOOT_HDR_LF_QUIET      = 0b0001'0000;  // W  early msg off
 constexpr uint8_t  BOOT_HDR_LF_KEEP_SGMT  = 0b0100'0000;  // Ob 2.07+ obsolute
 constexpr uint8_t  BOOT_HDR_LF_HEAP       = 0b1000'0000;  // W
+constexpr uint32_t BOOT_RAMDISK_IMAGE     = 0x0f00'0000;
 
 constexpr int      ELF_MAGIC_SIZE            = 4;
 constexpr char     ELF_MAGIC[ELF_MAGIC_SIZE] = {0x7f, 'E', 'L', 'F'};
@@ -125,45 +127,46 @@ struct ebda {  // why do we need padding?
 
 #pragma pack(1)
 struct boot_header {
-    uint8_t  setup_sects;      // R     ALL
-    uint16_t root_flags;       // Mop   ALL       deprecated
-    uint32_t sys_size;         // R     2.04+/ALL 16B paragraph. 4B if 2.04+
-    uint16_t ram_size;         // KI    ALL       obsolete
-    uint16_t vid_mode = 0xffff;  // Mob   ALL
-    uint16_t root_dev;         // Mop   ALL deprecated
-    uint16_t boot_flag;        // R     ALL
-    uint16_t jump;             // R     2.00+     0xeb+sgd_ofst_rltv_to_0x0202
-    uint32_t header;           // R     2.00+
-    uint16_t version;          // R     2.00+
-    uint32_t realmode_swtch;   // Mop   2.00+
-    uint16_t start_sys_seg;    // R     2.00+     obsolete. load low seg 0x1000
-    uint16_t kernel_version;   // R     2.00+
-    uint8_t  type_of_loader = 0xff; // Wob   2.00+
-    uint8_t  loadflags;        // Mob   2.00+
-    uint16_t setup_move_size;  // Mob   2.00-2.01 Negligible in the other ver
-    uint32_t code32_start;     // Mopre 2.00+
-    uint32_t ramdisk_image  = 0x0f00'0000;  // Wob   2.00+ initramfs linear addr
-    uint32_t ramdisk_size   = 0;  // Wob   2.00+     sizeof(initramfs)
-    uint32_t bootsect_kludge;  // KI    2.00+     obsolete
-    uint16_t heap_end_ptr;     // Wob   2.01+
-    uint8_t  ext_loader_ver;   // Wop   2.02+
-    uint8_t  ext_loader_type;  // W     2.02+     Wob if loader type is extended
-    uint32_t cmd_line_ptr;     // Wob   2.02+     command line linear addr
-    uint32_t initrd_addr_max;  // R     2.03+     max addr may be occupied
-    uint32_t kernel_alignmnet;  // 2.05+
-    uint8_t  relocatable_kernel;  // 2.05+
-    uint8_t  min_alignment;  // 2.10+
-    uint16_t xloadflags;  // 2.12+
-    uint32_t cmdline_size;  // 2.06+
-    uint32_t hardware_subarch;  // 2.07+
-    uint64_t hardware_subarch_data;  // 2.07+
-    uint32_t paylopad_offset;  // 2.08+
-    uint32_t payload_length;  // 2.08+
-    uint64_t setup_data;  // 2.09+
-    uint64_t pref_address;  // 2.10+
-    uint32_t init_size;  // 2.10+
-    uint32_t handover_offset;  // 2.11+
-    uint32_t kernel_info_offset;  // 2.15+
+    // *: fields should be written from bootloader
+    uint8_t  setup_sects;            //  R     ALL
+    uint16_t root_flags;             //  Mop   ALL       deprecated
+    uint32_t sys_size;               //  R     2.04+/ALL
+    uint16_t ram_size;               //  KI    ALL       obsolete
+    uint16_t vid_mode;               // *Mob   ALL
+    uint16_t root_dev;               //  Mop   ALL       deprecated
+    uint16_t boot_flag;              //  R     ALL
+    uint16_t jump;                   //  R     2.00+
+    uint32_t header;                 //  R     2.00+
+    uint16_t version;                //  R     2.00+
+    uint32_t realmode_swtch;         //  Mop   2.00+
+    uint16_t start_sys_seg;          //  R     2.00+     obsolete
+    uint16_t kernel_version;         //  R     2.00+
+    uint8_t  type_of_loader;         // *Wob   2.00+
+    uint8_t  loadflags;              // *Mob   2.00+     Bit 6: obsolete
+    uint16_t setup_move_size;        //  Mob   2.00-2.01
+    uint32_t code32_start;           //  Mopre 2.00+
+    uint32_t ramdisk_image;          // *Wob   2.00+
+    uint32_t ramdisk_size;           // *Wob   2.00+
+    uint32_t bootsect_kludge;        //  KI    2.00+     obsolete
+    uint16_t heap_end_ptr;           //  Wob   2.01+
+    uint8_t  ext_loader_ver;         //  Wop   2.02+
+    uint8_t  ext_loader_type;        //  W/Wob 2.02+
+    uint32_t cmd_line_ptr;           //  Wob   2.02+
+    uint32_t initrd_addr_max;        //  R     2.03+
+    uint32_t kernel_alignmnet;       //  RMre  2.05+
+    uint8_t  relocatable_kernel;     //  Rre   2.05+
+    uint8_t  min_alignment;          //  Rre   2.10+
+    uint16_t xloadflags;             //  R     2.12+
+    uint32_t cmdline_size;           //  R     2.06+
+    uint32_t hardware_subarch;       //  Wop   2.07+
+    uint64_t hardware_subarch_data;  //  W     2.07+
+    uint32_t paylopad_offset;        //  R     2.08+
+    uint32_t payload_length;         //  R     2.08+
+    uint64_t setup_data;             //  W     2.09+
+    uint64_t pref_address;           //  Rre   2.10+
+    uint32_t init_size;              //  R     2.10+
+    uint32_t handover_offset;        //  R     2.11+
+    uint32_t kernel_info_offset;     //  R     2.15+
 };
 
 #pragma pack(1)
@@ -171,24 +174,6 @@ struct command_line {
     uint8_t dummy = 0x00;
 };
 
-
-// This func doesn't change the value of the position indicator of kernel.
-// NOTE: wrong place?
-static inline bool is_elf(std::ifstream& kernel) {
-    char buf[ELF_MAGIC_SIZE];
-    std::ios::pos_type original_pos = kernel.tellg();
-
-    if (!kernel) {
-        std::cerr << __func__ << ": invalid ifstream given" << std::endl;
-        return false;
-    }
-
-    kernel.seekg(0, std::ios::beg);
-    kernel.read(buf, ELF_MAGIC_SIZE);
-    kernel.seekg(original_pos);
-
-    return std::equal(buf, buf+ELF_MAGIC_SIZE, ELF_MAGIC);
-};
 
 template <typename MpPtr>
 uint8_t mp_calc_checksum(MpPtr mpptr);
