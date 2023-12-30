@@ -34,7 +34,7 @@ int main() {
         return -1;
     }
 
-    r = vm->initRAM();
+    r = vm->initRAM("dummy");
     if (r < 0) {
         std::cerr << "vm->initBoot() failed" << std::endl;
         return -1;

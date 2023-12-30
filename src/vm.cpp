@@ -92,12 +92,16 @@ int VM::initMachine() {
     return 0;
 }
 
-int VM::initRAM(boot_header header) {
+int VM::initRAM(std::string cmdline, setup_header header) {
     ebda* ebda_start = reinterpret_cast<ebda*>((
                 reinterpret_cast<uint8_t*>(ram_start)+EBDA_START));
+    ebda* ebda_end;
     char* ramdisk_image = reinterpret_cast<char*>(ram_start)
-                                +BOOT_RAMDISK_IMAGE;
+                                + BOOT_RAMDISK_IMAGE;
     uint32_t ramdisk_size;
+    char* cmdline_start = reinterpret_cast<char*>(ram_start)
+                                + COMMANDLINE_ADDR;
+    char* cmdline_end;
 
     ebda ebda_data = gen_ebda(vm_conf.vcpu_num);
 
@@ -119,8 +123,9 @@ int VM::initRAM(boot_header header) {
         std::cerr << "ebda_data.ctable.checksum corrupted" << std::endl;
     }
 
-    std::copy_n(&ebda_data, 1, ebda_start);
+    ebda_end = std::copy_n(&ebda_data, 1, ebda_start);
     std::cout << "ebda_data copied to guest RAM: " << ebda_start << std::endl;
+    std::cout << "ebda_end: " << ebda_end << std::endl;
 
     std::cout << &header << std::endl;  // just for suppressing an error
 
@@ -128,21 +133,20 @@ int VM::initRAM(boot_header header) {
     // -  set virtio-net up (we won't do it for now)
     // <--- in another func
     // ---> in this func
-    // 0. poisoning the guest RAM for debugging here (optional)
-    // 1. get the size of initramfs and copy it to guest RAM
-    // 2. copy command line to guest RAM. make sure it is null-terminated!
-    // 3. read bootparam header data from kernel
-    // 4. e820 entries
-    // 5. write into bootparam header
-    // 6. copy whole? bootparam into guest RAM
-    // 7. copy protected-mode kernel into guest RAM
+    // - [ ] 0. poisoning the guest RAM for debugging here (optional)
+    // - [x] 1. copy command line to guest RAM. make sure it is null-terminated!
+    // - [x] 2. get the size of initramfs and copy it to guest RAM
+    // - [ ] 3. read bootparam header data from kernel
+    // - [ ] 4. e820 entries
+    // - [ ] 5. write into bootparam header
+    // - [ ] 6. copy whole? bootparam into guest RAM
+    // - [ ] 7. copy protected-mode kernel into guest RAM
     // <--- in this func
     // in another func --->
     // 8. init vCPUs regs
     // 9. add devs cmos noop
     // 10. init ioporthandler
 
-    // 1
     ramdisk_size = get_ifs_size(initramfs);
     std::cout << "initramfs size: " << ramdisk_size << std::endl;
     if (!initramfs.read(ramdisk_image, ramdisk_size)) {
@@ -151,6 +155,16 @@ int VM::initRAM(boot_header header) {
     }
     std::cout << "initramfs copied to guest RAM: "
         << static_cast<void*>(ramdisk_image) << std::endl;
+
+    std::cout << "cmdline size: " << cmdline.size() << std::endl;
+    cmdline_end = std::copy_n(cmdline.begin(), cmdline.size(), cmdline_start);
+    *cmdline_end = '\0';  // null-terminate
+    std::cout << "cmdline copied to guest RAM: "
+        << static_cast<void*>(cmdline_start) << std::endl;
+    std::cout << "cmdline_end: "
+        << static_cast<void*>(cmdline_end) << std::endl;
+
+    std::cout << "";
 
     std::cout << "VM::" << __func__ << ": success" << std::endl;
 

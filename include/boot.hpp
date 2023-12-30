@@ -12,7 +12,11 @@
 
 
 constexpr int      PARAGRAPH_SIZE   = 16;
+constexpr int      SECT_SIZE        = 512;
+
+constexpr uint32_t COMMANDLINE_ADDR = 0x0002'0000;
 constexpr uint32_t EBDA_START       = 0x0009'fc00;
+constexpr uint32_t INITRAMFS_ADDR   = 0x0f00'0000;
 
 constexpr int      EBDA_PADDING_SIZE = 16*3;
 constexpr uint32_t APIC_BASE         = 0xfee0'0000;
@@ -66,7 +70,7 @@ constexpr uint8_t  BOOT_HDR_LF_KASLR      = 0b0000'0010;  // KI
 constexpr uint8_t  BOOT_HDR_LF_QUIET      = 0b0001'0000;  // W  early msg off
 constexpr uint8_t  BOOT_HDR_LF_KEEP_SGMT  = 0b0100'0000;  // Ob 2.07+ obsolute
 constexpr uint8_t  BOOT_HDR_LF_HEAP       = 0b1000'0000;  // W
-constexpr uint32_t BOOT_RAMDISK_IMAGE     = 0x0f00'0000;
+constexpr uint32_t BOOT_RAMDISK_IMAGE     = INITRAMFS_ADDR;
 
 constexpr int      ELF_MAGIC_SIZE            = 4;
 constexpr char     ELF_MAGIC[ELF_MAGIC_SIZE] = {0x7f, 'E', 'L', 'F'};
@@ -127,7 +131,7 @@ struct ebda {  // why do we need padding?
 };
 
 #pragma pack(1)
-struct boot_header {
+struct setup_header {
     // *: fields should be written from bootloader
     uint8_t  setup_sects;            //  R     ALL
     uint16_t root_flags;             //  Mop   ALL       deprecated
@@ -170,11 +174,16 @@ struct boot_header {
     uint32_t kernel_info_offset;     //  R     2.15+
 };
 
-#pragma pack(1)
-struct command_line {
-    uint8_t dummy = 0x00;
+struct boot_params {
+    uint8_t      padding0[0x1e8];
+    uint8_t      e820_entries;
+    uint8_t      eddbuf_entries;
+    uint8_t      edd_mbr_sig_buf_entries;
+    uint8_t      kbd_status;
+    uint8_t      padding1[0x5];
+    setup_header header;
+    uint8_t      padding2[0x290-(0x1eb+0x5)-0x1-sizeof(setup_header)];
 };
-
 
 template <typename MpPtr>
 uint8_t mp_calc_checksum(MpPtr mpptr);
