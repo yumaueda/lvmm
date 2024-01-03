@@ -178,6 +178,9 @@ struct setup_header {
     uint32_t init_size;              //  R     2.10+
     uint32_t handover_offset;        //  R     2.11+
     uint32_t kernel_info_offset;     //  R     2.15+
+
+    public:
+        int is_valid();
 };
 
 #pragma pack(1)
@@ -191,6 +194,7 @@ struct boot_params {
     setup_header header;
     uint8_t      padding2[0x290-(0x1eb+0x5)-0x1-sizeof(setup_header)];
 };
+
 
 template <typename MpPtr>
 uint8_t mp_calc_checksum(MpPtr mpptr);

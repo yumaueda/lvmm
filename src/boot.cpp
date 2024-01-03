@@ -23,6 +23,11 @@ uint8_t mp_calc_checksum<mpctable*>(mpctable* mpptr) {
     return _mp_calc_checksum_inline(byteptr_ctable, MPCTABLE_LENGTH);
 }
 
+int setup_header::is_valid() {
+    return this->header == BOOT_HDR_MAGIC ? 1 : 0;
+}
+
+
 #ifndef UNITTEST
 static
 #endif

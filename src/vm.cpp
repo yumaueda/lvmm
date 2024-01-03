@@ -172,11 +172,18 @@ int VM::initRAM(std::string cmdline) {
     kernel.read(reinterpret_cast<char*>(&bp.header), sizeof(bp.header));
     if (!kernel) {
         kernel.seekg(0, std::ios::beg);
-        std::cout << "Couldn't read a setup header from the kernel image" << std::endl;
+        std::cerr << "Couldn't read a setup header from the kernel image" << std::endl;
         return 1;
     }
     kernel.seekg(0, std::ios::beg);
     std::cout << "bootparam setup header has been loaded from the kernel image" << std::endl;
+
+    if (bp.header.is_valid()) {
+        std::cout << "bootparam setup header is valid" << std::endl;
+    } else {
+        std::cerr << "bootparam setup header is invalid" << std::endl;
+        return 1;
+    }
 
     std::cout << "VM::" << __func__ << ": success" << std::endl;
 
