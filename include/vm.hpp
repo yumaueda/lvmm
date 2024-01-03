@@ -43,7 +43,7 @@ class VM : public BaseClass {
         ~VM();
 
         int initMachine();
-        int initRAM(std::string cmdline, setup_header header = {});
+        int initRAM(std::string cmdline);
 
     private:
         KVM& kvm;

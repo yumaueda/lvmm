@@ -9,17 +9,23 @@
 #include <ios>
 #include <iostream>
 #include <string>
+#include <vm.hpp>
 
 
-constexpr int      PARAGRAPH_SIZE   = 16;
-constexpr int      SECT_SIZE        = 512;
+class VM;
 
-constexpr uint32_t COMMANDLINE_ADDR = 0x0002'0000;
-constexpr uint32_t EBDA_START       = 0x0009'fc00;
-constexpr uint32_t INITRAMFS_ADDR   = 0x0f00'0000;
 
-constexpr int      EBDA_PADDING_SIZE = 16*3;
-constexpr uint32_t APIC_BASE         = 0xfee0'0000;
+constexpr int      SETUP_HEADER_ADDR       = 0x0000'01f1;
+
+constexpr int      PARAGRAPH_SIZE      = 16;
+constexpr int      SECT_SIZE           = 512;
+
+constexpr uint32_t COMMANDLINE_ADDR    = 0x0002'0000;
+constexpr uint32_t EBDA_START          = 0x0009'fc00;
+constexpr uint32_t INITRAMFS_ADDR      = 0x0f00'0000;
+
+constexpr int      EBDA_PADDING_SIZE   = 16*3;
+constexpr uint32_t APIC_BASE           = 0xfee0'0000;
 
 
 constexpr int      MP_MAX_VCPU_NUM           = 32;
@@ -174,6 +180,7 @@ struct setup_header {
     uint32_t kernel_info_offset;     //  R     2.15+
 };
 
+#pragma pack(1)
 struct boot_params {
     uint8_t      padding0[0x1e8];
     uint8_t      e820_entries;

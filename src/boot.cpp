@@ -1,7 +1,6 @@
+#include <ios>
+#include <iostream>
 #include <boot.hpp>
-
-
-// NOTE: we should re-implement some function as the member of an object
 
 
 static inline

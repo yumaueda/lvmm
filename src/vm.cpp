@@ -92,7 +92,7 @@ int VM::initMachine() {
     return 0;
 }
 
-int VM::initRAM(std::string cmdline, setup_header header) {
+int VM::initRAM(std::string cmdline) {
     ebda* ebda_start = reinterpret_cast<ebda*>((
                 reinterpret_cast<uint8_t*>(ram_start)+EBDA_START));
     ebda* ebda_end;
@@ -127,8 +127,6 @@ int VM::initRAM(std::string cmdline, setup_header header) {
     std::cout << "ebda_data copied to guest RAM: " << ebda_start << std::endl;
     std::cout << "ebda_end: " << ebda_end << std::endl;
 
-    std::cout << &header << std::endl;  // just for suppressing an error
-
     // TODO:
     // -  set virtio-net up (we won't do it for now)
     // <--- in another func
@@ -136,7 +134,7 @@ int VM::initRAM(std::string cmdline, setup_header header) {
     // - [ ] 0. poisoning the guest RAM for debugging here (optional)
     // - [x] 1. copy command line to guest RAM. make sure it is null-terminated!
     // - [x] 2. get the size of initramfs and copy it to guest RAM
-    // - [ ] 3. read bootparam header data from kernel
+    // - [x] 3. read bootparam setup header data from kernel
     // - [ ] 4. e820 entries
     // - [ ] 5. write into bootparam header
     // - [ ] 6. copy whole? bootparam into guest RAM
@@ -147,6 +145,7 @@ int VM::initRAM(std::string cmdline, setup_header header) {
     // 9. add devs cmos noop
     // 10. init ioporthandler
 
+    // initramfs
     ramdisk_size = get_ifs_size(initramfs);
     std::cout << "initramfs size: " << ramdisk_size << std::endl;
     if (!initramfs.read(ramdisk_image, ramdisk_size)) {
@@ -156,6 +155,7 @@ int VM::initRAM(std::string cmdline, setup_header header) {
     std::cout << "initramfs copied to guest RAM: "
         << static_cast<void*>(ramdisk_image) << std::endl;
 
+    // cmdline
     std::cout << "cmdline size: " << cmdline.size() << std::endl;
     cmdline_end = std::copy_n(cmdline.begin(), cmdline.size(), cmdline_start);
     *cmdline_end = '\0';  // null-terminate
@@ -164,7 +164,19 @@ int VM::initRAM(std::string cmdline, setup_header header) {
     std::cout << "cmdline_end: "
         << static_cast<void*>(cmdline_end) << std::endl;
 
-    std::cout << "";
+    // bootparam
+    // just create bootparam struct and load setup header from 0x1f1
+    boot_params bp;
+
+    kernel.seekg(SETUP_HEADER_ADDR, std::ios::beg);
+    kernel.read(reinterpret_cast<char*>(&bp.header), sizeof(bp.header));
+    if (!kernel) {
+        kernel.seekg(0, std::ios::beg);
+        std::cout << "Couldn't read a setup header from the kernel image" << std::endl;
+        return 1;
+    }
+    kernel.seekg(0, std::ios::beg);
+    std::cout << "bootparam setup header has been loaded from the kernel image" << std::endl;
 
     std::cout << "VM::" << __func__ << ": success" << std::endl;
 
