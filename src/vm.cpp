@@ -102,6 +102,9 @@ int VM::initRAM(std::string cmdline) {
     char* cmdline_start = reinterpret_cast<char*>(ram_start)
                                 + COMMANDLINE_ADDR;
     char* cmdline_end;
+    boot_params* boot_params_start = reinterpret_cast<boot_params*>((
+                reinterpret_cast<uint8_t*>(ram_start)+BOOT_PARAMS_ADDR));
+    boot_params* boot_params_end;
 
     ebda ebda_data = gen_ebda(vm_conf.vcpu_num);
 
@@ -140,7 +143,7 @@ int VM::initRAM(std::string cmdline) {
     // - [x]  3. get the size of initramfs and copy it to guest RAM
     // - [x]  4. read bootparam setup header data from kernel
     // - [x]  5. write into bootparam e820 entries / setup header
-    // - [ ]  6. bootparam into guest RAM
+    // - [x]  6. bootparam into guest RAM
     // - [ ]  7. copy protected-mode kernel into guest RAM
     // <--- in this func
     //
@@ -160,7 +163,7 @@ int VM::initRAM(std::string cmdline) {
         << static_cast<void*>(ramdisk_image) << std::endl;
 
     // cmdline
-    // FIXME: Should we check commandline size?
+    // FIXME: should check commandline size before do this
     std::cout << "cmdline size: " << cmdline.size() << std::endl;
     cmdline_end = std::copy_n(cmdline.begin(), cmdline.size(), cmdline_start);
     *cmdline_end = '\0';  // null-terminate
@@ -210,6 +213,12 @@ int VM::initRAM(std::string cmdline) {
     bp.header.ramdisk_size   = ramdisk_size;
     bp.header.heap_end_ptr   = BOOT_PARAMS_ADDR - BOOT_HDR_HEAPEND_OFFSET;
     bp.header.cmd_line_ptr   = COMMANDLINE_ADDR;
+
+    boot_params_end = std::copy_n(&bp, 1, boot_params_start);
+    std::cout << "boot_params copied to guest RAM: "
+        << static_cast<void*>(boot_params_start) << std::endl;
+    std::cout << "boot_params_end: "
+        << static_cast<void*>(boot_params_end) << std::endl;
 
     std::cout << "VM::" << __func__ << ": success" << std::endl;
 
