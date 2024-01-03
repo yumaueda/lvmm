@@ -97,7 +97,7 @@ int VM::initRAM(std::string cmdline) {
                 reinterpret_cast<uint8_t*>(ram_start)+EBDA_START));
     ebda* ebda_end;
     char* ramdisk_image = reinterpret_cast<char*>(ram_start)
-                                + BOOT_RAMDISK_IMAGE;
+                                + INITRAMFS_ADDR;
     uint32_t ramdisk_size;
     char* cmdline_start = reinterpret_cast<char*>(ram_start)
                                 + COMMANDLINE_ADDR;
@@ -128,22 +128,26 @@ int VM::initRAM(std::string cmdline) {
     std::cout << "ebda_end: " << ebda_end << std::endl;
 
     // TODO:
-    // -  set virtio-net up (we won't do it for now)
+    // REF L159: we should load setup header first cuz we don't know
+    // max command line size till we do it.
+    // - [ ]  0. set virtio-net up (we won't do it for now)
+    //
     // <--- in another func
+    //
     // ---> in this func
-    // - [ ] 0. poisoning the guest RAM for debugging here (optional)
-    // - [x] 1. copy command line to guest RAM. make sure it is null-terminated!
-    // - [x] 2. get the size of initramfs and copy it to guest RAM
-    // - [x] 3. read bootparam setup header data from kernel
-    // - [ ] 4. e820 entries
-    // - [ ] 5. write into bootparam header
-    // - [ ] 6. copy whole? bootparam into guest RAM
-    // - [ ] 7. copy protected-mode kernel into guest RAM
+    // - [ ]  1. poisoning the guest RAM for debugging here (optional)
+    // - [x]  2. copy command line to guest RAM. make sure it is null-terminated!
+    // - [x]  3. get the size of initramfs and copy it to guest RAM
+    // - [x]  4. read bootparam setup header data from kernel
+    // - [x]  5. write into bootparam e820 entries / setup header
+    // - [ ]  6. bootparam into guest RAM
+    // - [ ]  7. copy protected-mode kernel into guest RAM
     // <--- in this func
+    //
     // in another func --->
-    // 8. init vCPUs regs
-    // 9. add devs cmos noop
-    // 10. init ioporthandler
+    // - [ ]  8. init vCPUs regs
+    // - [ ]  9. add devs cmos noop
+    // - [ ] 10. init ioporthandler
 
     // initramfs
     ramdisk_size = get_ifs_size(initramfs);
@@ -156,6 +160,7 @@ int VM::initRAM(std::string cmdline) {
         << static_cast<void*>(ramdisk_image) << std::endl;
 
     // cmdline
+    // FIXME: Should we check commandline size?
     std::cout << "cmdline size: " << cmdline.size() << std::endl;
     cmdline_end = std::copy_n(cmdline.begin(), cmdline.size(), cmdline_start);
     *cmdline_end = '\0';  // null-terminate
@@ -165,7 +170,6 @@ int VM::initRAM(std::string cmdline) {
         << static_cast<void*>(cmdline_end) << std::endl;
 
     // bootparam
-    // just create bootparam struct and load setup header from 0x1f1
     boot_params bp;
 
     kernel.seekg(SETUP_HEADER_ADDR, std::ios::beg);
@@ -181,9 +185,31 @@ int VM::initRAM(std::string cmdline) {
     if (bp.header.is_valid()) {
         std::cout << "bootparam setup header is valid" << std::endl;
     } else {
-        std::cerr << "bootparam setup header is invalid" << std::endl;
+        std::cerr << "bootparam setup header is invalid or the boot protocol version is old" << std::endl;
         return 1;
     }
+
+    if (bp.header.check_setup_sects())
+        std::cout << "The value of setup_sects has been modified to 4" << std::endl;
+
+    std::cout << "Writing to bootparam..." << std::endl;
+
+    bp.add_e820_entry(REALMODE_IVT_START, EBDA_START-REALMODE_IVT_START, BOOT_E820_TYPE_RAM);
+    bp.add_e820_entry(EBDA_START, VGARAM_START-EBDA_START, BOOT_E820_TYPE_RESERVED);
+    bp.add_e820_entry(MBBIOS_START, MBBIOS_SIZE, BOOT_E820_TYPE_RESERVED);
+    bp.add_e820_entry(HIGHMEM_BASE, vm_conf.ram_size, BOOT_E820_TYPE_RAM);
+
+    // change later to print these writing processs
+    // some kind of setter?
+    bp.header.vid_mode       = BOOT_HDR_VID_MODE_NML;
+    bp.header.type_of_loader = BOOT_HDR_BLT_UNDEFINED;
+    bp.header.loadflags      = BOOT_HDR_LF_HIGH
+                             | BOOT_HDR_LF_KEEP_SGMT
+                             | BOOT_HDR_LF_HEAP;
+    bp.header.ramdisk_image  = INITRAMFS_ADDR;
+    bp.header.ramdisk_size   = ramdisk_size;
+    bp.header.heap_end_ptr   = BOOT_PARAMS_ADDR - BOOT_HDR_HEAPEND_OFFSET;
+    bp.header.cmd_line_ptr   = COMMANDLINE_ADDR;
 
     std::cout << "VM::" << __func__ << ": success" << std::endl;
 

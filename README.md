@@ -1,17 +1,18 @@
 # lmigtester
 
-An Expretimental VMM for Hardware Accelerated Live Migration
+An Expretimental VMM for Hardware Accelerated Live Migration.
 
 ## Memory Layout
 
 ```
+                        ~                             ~
             0xffff_ffff +-----------------------------+
                         ~                             ~
                         | INITRAMFS                   |
             0x0f00_0000 +-----------------------------+
                         ~                             ~
                         | PROTECTED-MODE LINUX KERNEL |
-RIP?->      0x0010_0000 +-----------------------------+ <-
+RIP->       0x0010_0000 +-----------------------------+ <-
                         ~                             ~  |
                         | MBBIOS                      |  |
             0x000f_0000 +-----------------------------+  |- I/O MEMORY HOLE
@@ -25,9 +26,14 @@ RIP?->      0x0010_0000 +-----------------------------+ <-
                         | COMMAND LINE                |
             0x0002_0000 +-----------------------------+
                         ~                             ~
+                        | BOOT PARAMETERS             |
+RSI->       0x0001_0000 +-----------------------------+
+                        ~                             ~
+                        | HEAP END                    |
+                        ~                             ~
             0x0000_2000 +-----------------------------+
                         | ZERO PAGE                   |
-RSI?->      0x0000_1000 +-----------------------------+
+            0x0000_1000 +-----------------------------+
                         | RESERVED                    |
             0x0000_0000 +-----------------------------+
 ```

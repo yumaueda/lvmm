@@ -24,7 +24,28 @@ uint8_t mp_calc_checksum<mpctable*>(mpctable* mpptr) {
 }
 
 int setup_header::is_valid() {
-    return this->header == BOOT_HDR_MAGIC ? 1 : 0;
+    return header == BOOT_HDR_MAGIC ? 1 : 0;
+}
+
+int setup_header::check_setup_sects() {
+    if (setup_sects == 0) {
+        setup_sects = 4;
+        return 1;
+    }
+    return 0;
+}
+
+void boot_params::increment_e820_entry() {
+    e820_entries++;
+}
+
+void boot_params::add_e820_entry(uint64_t addr, uint64_t size, uint32_t type) {
+    std::cout << "e820map[" << unsigned(e820_entries)
+        << "]: addr=" << addr
+        << ", size=" << size
+        << ", type=" << type << std::endl;
+    e820map[e820_entries] = { addr, size, type };
+    increment_e820_entry();
 }
 
 

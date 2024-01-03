@@ -15,17 +15,23 @@
 class VM;
 
 
-constexpr int      SETUP_HEADER_ADDR       = 0x0000'01f1;
 
 constexpr int      PARAGRAPH_SIZE      = 16;
 constexpr int      SECT_SIZE           = 512;
 
+constexpr uint64_t REALMODE_IVT_START  = 0x0000'0000;
+constexpr uint32_t BOOT_PARAMS_ADDR    = 0x0001'0000;
 constexpr uint32_t COMMANDLINE_ADDR    = 0x0002'0000;
 constexpr uint32_t EBDA_START          = 0x0009'fc00;
+constexpr uint32_t VGARAM_START        = 0x000a'0000;
+constexpr uint32_t MBBIOS_START        = 0x000f'0000;
+constexpr uint32_t HIGHMEM_BASE        = 0x0010'0000;
 constexpr uint32_t INITRAMFS_ADDR      = 0x0f00'0000;
+constexpr uint32_t APIC_BASE           = 0xfee0'0000;
+
+constexpr uint32_t MBBIOS_SIZE         = 0x000f'ffff;
 
 constexpr int      EBDA_PADDING_SIZE   = 16*3;
-constexpr uint32_t APIC_BASE           = 0xfee0'0000;
 
 
 constexpr int      MP_MAX_VCPU_NUM           = 32;
@@ -64,19 +70,25 @@ constexpr uint32_t MPCTE_PROC_FEATFLAGS_APIC = 0x0000'0200;
 // We should fill the cpu signature field w/ a value returned by CPUID.
 constexpr uint32_t MPCTE_PROC_CPUSIGNATURE   = 0x0000'0600;
 
-constexpr uint16_t BOOT_HDR_VID_MODE_NML  = 0xffff;
-constexpr uint16_t BOOT_HDR_BOOT_FLAG     = 0xaaff;
-constexpr uint32_t BOOT_HDR_MAGIC         = static_cast<uint32_t>('S')<<24
-                                           |static_cast<uint32_t>('r')<<16
-                                           |static_cast<uint32_t>('d')<< 8
-                                           |static_cast<uint32_t>('H')<< 0;
-constexpr uint8_t  BOOT_HDR_BLT_UNDEFINED = 0xff;
-constexpr uint8_t  BOOT_HDR_LF_HIGH       = 0b0000'0001;  // R
-constexpr uint8_t  BOOT_HDR_LF_KASLR      = 0b0000'0010;  // KI
-constexpr uint8_t  BOOT_HDR_LF_QUIET      = 0b0001'0000;  // W  early msg off
-constexpr uint8_t  BOOT_HDR_LF_KEEP_SGMT  = 0b0100'0000;  // Ob 2.07+ obsolute
-constexpr uint8_t  BOOT_HDR_LF_HEAP       = 0b1000'0000;  // W
-constexpr uint32_t BOOT_RAMDISK_IMAGE     = INITRAMFS_ADDR;
+constexpr uint32_t BOOT_EDD_MBR_SIG_MAX    = 16;
+constexpr uint32_t BOOT_E820_MAP_MAX       = 128;
+constexpr uint32_t BOOT_E820_TYPE_RAM      = 1;
+constexpr uint32_t BOOT_E820_TYPE_RESERVED = 2;
+
+constexpr int      SETUP_HEADER_ADDR       = 0x0000'01f1;
+constexpr uint16_t BOOT_HDR_VID_MODE_NML   = 0xffff;
+constexpr uint16_t BOOT_HDR_BOOT_FLAG      = 0xaaff;
+constexpr uint32_t BOOT_HDR_MAGIC          = static_cast<uint32_t>('S')<<24
+                                            |static_cast<uint32_t>('r')<<16
+                                            |static_cast<uint32_t>('d')<< 8
+                                            |static_cast<uint32_t>('H')<< 0;
+constexpr uint8_t  BOOT_HDR_BLT_UNDEFINED  = 0xff;
+constexpr uint8_t  BOOT_HDR_LF_HIGH        = 0b0000'0001;  // R
+constexpr uint8_t  BOOT_HDR_LF_KASLR       = 0b0000'0010;  // KI
+constexpr uint8_t  BOOT_HDR_LF_QUIET       = 0b0001'0000;  // W  early msg off
+constexpr uint8_t  BOOT_HDR_LF_KEEP_SGMT   = 0b0100'0000;  // Ob 2.07+ obsolute
+constexpr uint8_t  BOOT_HDR_LF_HEAP        = 0b1000'0000;  // W
+constexpr uint32_t BOOT_HDR_HEAPEND_OFFSET = 0x200;
 
 constexpr int      ELF_MAGIC_SIZE            = 4;
 constexpr char     ELF_MAGIC[ELF_MAGIC_SIZE] = {0x7f, 'E', 'L', 'F'};
@@ -139,60 +151,77 @@ struct ebda {  // why do we need padding?
 #pragma pack(1)
 struct setup_header {
     // *: fields should be written from bootloader
-    uint8_t  setup_sects;            //  R     ALL
-    uint16_t root_flags;             //  Mop   ALL       deprecated
-    uint32_t sys_size;               //  R     2.04+/ALL
-    uint16_t ram_size;               //  KI    ALL       obsolete
-    uint16_t vid_mode;               // *Mob   ALL
-    uint16_t root_dev;               //  Mop   ALL       deprecated
-    uint16_t boot_flag;              //  R     ALL
-    uint16_t jump;                   //  R     2.00+
-    uint32_t header;                 //  R     2.00+
-    uint16_t version;                //  R     2.00+
-    uint32_t realmode_swtch;         //  Mop   2.00+
-    uint16_t start_sys_seg;          //  R     2.00+     obsolete
-    uint16_t kernel_version;         //  R     2.00+
-    uint8_t  type_of_loader;         // *Wob   2.00+
-    uint8_t  loadflags;              // *Mob   2.00+     Bit 6: obsolete
-    uint16_t setup_move_size;        //  Mob   2.00-2.01
-    uint32_t code32_start;           //  Mopre 2.00+
-    uint32_t ramdisk_image;          // *Wob   2.00+
-    uint32_t ramdisk_size;           // *Wob   2.00+
-    uint32_t bootsect_kludge;        //  KI    2.00+     obsolete
-    uint16_t heap_end_ptr;           //  Wob   2.01+
-    uint8_t  ext_loader_ver;         //  Wop   2.02+
-    uint8_t  ext_loader_type;        //  W/Wob 2.02+
-    uint32_t cmd_line_ptr;           //  Wob   2.02+
-    uint32_t initrd_addr_max;        //  R     2.03+
-    uint32_t kernel_alignmnet;       //  RMre  2.05+
-    uint8_t  relocatable_kernel;     //  Rre   2.05+
-    uint8_t  min_alignment;          //  Rre   2.10+
-    uint16_t xloadflags;             //  R     2.12+
-    uint32_t cmdline_size;           //  R     2.06+
-    uint32_t hardware_subarch;       //  Wop   2.07+
-    uint64_t hardware_subarch_data;  //  W     2.07+
-    uint32_t paylopad_offset;        //  R     2.08+
-    uint32_t payload_length;         //  R     2.08+
-    uint64_t setup_data;             //  W     2.09+
-    uint64_t pref_address;           //  Rre   2.10+
-    uint32_t init_size;              //  R     2.10+
-    uint32_t handover_offset;        //  R     2.11+
-    uint32_t kernel_info_offset;     //  R     2.15+
+    uint8_t  setup_sects = 0;            //  R     ALL
+    uint16_t root_flags = 0;             //  Mop   ALL       deprecated
+    uint32_t sys_size = 0;               //  R     2.04+/ALL
+    uint16_t ram_size = 0;               //  KI    ALL       obsolete
+    uint16_t vid_mode = 0;               // *Mob   ALL
+    uint16_t root_dev = 0;               //  Mop   ALL       deprecated
+    uint16_t boot_flag = 0;              //  R     ALL
+    uint16_t jump = 0;                   //  R     2.00+
+    uint32_t header = 0;                 //  R     2.00+
+    uint16_t version = 0;                //  R     2.00+
+    uint32_t realmode_swtch = 0;         //  Mop   2.00+
+    uint16_t start_sys_seg = 0;          //  R     2.00+     obsolete
+    uint16_t kernel_version = 0;         //  R     2.00+
+    uint8_t  type_of_loader = 0;         // *Wob   2.00+
+    uint8_t  loadflags = 0;              // *Mob   2.00+     Bit 6: obsolete
+    uint16_t setup_move_size = 0;        //  Mob   2.00-2.01
+    uint32_t code32_start = 0;           //  Mopre 2.00+
+    uint32_t ramdisk_image = 0;          // *Wob   2.00+
+    uint32_t ramdisk_size = 0;           // *Wob   2.00+
+    uint32_t bootsect_kludge = 0;        //  KI    2.00+     obsolete
+    uint16_t heap_end_ptr = 0;           //  Wob   2.01+
+    uint8_t  ext_loader_ver = 0;         //  Wop   2.02+
+    uint8_t  ext_loader_type = 0;        //  W/Wob 2.02+
+    uint32_t cmd_line_ptr = 0;           //  Wob   2.02+
+    uint32_t initrd_addr_max = 0;        //  R     2.03+
+    uint32_t kernel_alignmnet = 0;       //  RMre  2.05+
+    uint8_t  relocatable_kernel = 0;     //  Rre   2.05+
+    uint8_t  min_alignment = 0;          //  Rre   2.10+
+    uint16_t xloadflags = 0;             //  R     2.12+
+    uint32_t cmdline_size = 0;           //  R     2.06+
+    uint32_t hardware_subarch = 0;       //  Wop   2.07+
+    uint64_t hardware_subarch_data = 0;  //  W     2.07+
+    uint32_t paylopad_offset = 0;        //  R     2.08+
+    uint32_t payload_length = 0;         //  R     2.08+
+    uint64_t setup_data = 0;             //  W     2.09+
+    uint64_t pref_address = 0;           //  Rre   2.10+
+    uint32_t init_size = 0;              //  R     2.10+
+    uint32_t handover_offset = 0;        //  R     2.11+
+    uint32_t kernel_info_offset = 0;     //  R     2.15+
 
-    public:
-        int is_valid();
+    int is_valid();
+    int check_setup_sects();
+};
+
+#pragma pack(1)
+struct e820entry {
+    uint64_t addr = 0;
+    uint64_t size = 0;
+    uint32_t type = 0;
 };
 
 #pragma pack(1)
 struct boot_params {
-    uint8_t      padding0[0x1e8];
-    uint8_t      e820_entries;
-    uint8_t      eddbuf_entries;
-    uint8_t      edd_mbr_sig_buf_entries;
-    uint8_t      kbd_status;
-    uint8_t      padding1[0x5];
+    uint8_t      padding0[0x1e8] = { 0 };
+    uint8_t      e820_entries = 0;
+    uint8_t      edd_buf_entries = 0;
+    uint8_t      edd_mbr_sig_buf_entries = 0;
+    uint8_t      kbd_status = 0;
+    uint8_t      padding1[0x5] = { 0 };
     setup_header header;
-    uint8_t      padding2[0x290-(0x1eb+0x5)-0x1-sizeof(setup_header)];
+    uint8_t      padding2[0x290-(0x1eb+0x5)-0x1-sizeof(setup_header)] = { 0 };
+    uint8_t      padding3[0x3d] = { 0 };
+    uint8_t      edd_mbr_sig_buf[BOOT_EDD_MBR_SIG_MAX] = { 0 };
+    e820entry    e820map[BOOT_E820_MAP_MAX];
+
+    private:
+        void increment_e820_entry();
+
+    public:
+        void add_e820_entry(uint64_t addr, uint64_t size, uint32_t type);
+
 };
 
 

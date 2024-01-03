@@ -7,7 +7,6 @@
 #include <iostream>
 
 
-// These funcs don't change the value of the position indicator of kernel.
 static inline std::streamsize get_ifs_size(std::ifstream& file) {
     std::ios::pos_type original_pos = file.tellg();
 
