@@ -29,14 +29,14 @@ int main() {
 
 
     r = vm->initMachine();
-    if (r < 0) {
+    if (r) {
         std::cerr << "vm->initMachine() failed" << std::endl;
         return -1;
     }
 
     r = vm->initRAM("dummy");
-    if (r < 0) {
-        std::cerr << "vm->initBoot() failed" << std::endl;
+    if (r) {
+        std::cerr << "vm->initRAM() failed" << std::endl;
         return -1;
     }
 

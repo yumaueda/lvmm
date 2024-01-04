@@ -96,12 +96,17 @@ int VM::initRAM(std::string cmdline) {
     ebda* ebda_start = reinterpret_cast<ebda*>((
                 reinterpret_cast<uint8_t*>(ram_start)+EBDA_START));
     ebda* ebda_end;
+
     char* ramdisk_image = reinterpret_cast<char*>(ram_start)
                                 + INITRAMFS_ADDR;
-    uint32_t ramdisk_size;
+    char* kernel_image  = reinterpret_cast<char*>(ram_start)
+                                + HIGHMEM_BASE;
+    std::streamsize ramdisk_size, kernel_size;
+
     char* cmdline_start = reinterpret_cast<char*>(ram_start)
                                 + COMMANDLINE_ADDR;
     char* cmdline_end;
+
     boot_params* boot_params_start = reinterpret_cast<boot_params*>((
                 reinterpret_cast<uint8_t*>(ram_start)+BOOT_PARAMS_ADDR));
     boot_params* boot_params_end;
@@ -156,7 +161,7 @@ int VM::initRAM(std::string cmdline) {
     ramdisk_size = get_ifs_size(initramfs);
     std::cout << "initramfs size: " << ramdisk_size << std::endl;
     if (!initramfs.read(ramdisk_image, ramdisk_size)) {
-        std::cerr << "cannnot read from initramfs" << std::endl;
+        std::cerr << "couldn't read from initramfs" << std::endl;
         return 1;
     }
     std::cout << "initramfs copied to guest RAM: "
@@ -219,6 +224,15 @@ int VM::initRAM(std::string cmdline) {
         << static_cast<void*>(boot_params_start) << std::endl;
     std::cout << "boot_params_end: "
         << static_cast<void*>(boot_params_end) << std::endl;
+
+    // kernel
+    kernel_size = (bp.header.setup_sects+1) * SECT_SIZE;
+    if (!kernel.read(kernel_image, kernel_size)) {
+        std::cerr << "couldn't load kernel image" << std::endl;
+        return 1;
+    }
+    std::cout << "kernel image copied to guest RAM: "
+        << static_cast<void*>(kernel_image) << std::endl;
 
     std::cout << "VM::" << __func__ << ": success" << std::endl;
 
