@@ -3,28 +3,47 @@
 
 
 #include <linux/kvm.h>
-
 #include <baseclass.hpp>
 #include <kvm.hpp>
 
 
 class KVM;
 
-constexpr uint64_t CR0_PE    = 1;
-constexpr uint64_t CR0_MP    = 1 << 1;
-constexpr uint64_t CR0_EM    = 1 << 2;
-constexpr uint64_t CR0_TS    = 1 << 3;
-constexpr uint64_t CR0_ET    = 1 << 4;
-constexpr uint64_t CR0_NE    = 1 << 5;
-constexpr uint64_t CR0_WP    = 1 << 16;
-constexpr uint64_t CR0_AM    = 1 << 18;
-constexpr uint64_t CR0_NW    = 1 << 29;
-constexpr uint64_t CR0_CD    = 1 << 30;
-constexpr uint64_t CR0_PG    = 1 << 31;
 
-constexpr uint64_t CR4_PAE   = 1 << 5;
+constexpr uint64_t CR0_PE            = 1;
+constexpr uint64_t CR0_MP            = 1 << 1;
+constexpr uint64_t CR0_EM            = 1 << 2;
+constexpr uint64_t CR0_TS            = 1 << 3;
+constexpr uint64_t CR0_ET            = 1 << 4;
+constexpr uint64_t CR0_NE            = 1 << 5;
+constexpr uint64_t CR0_WP            = 1 << 16;
+constexpr uint64_t CR0_AM            = 1 << 18;
+constexpr uint64_t CR0_NW            = 1 << 29;
+constexpr uint64_t CR0_CD            = 1 << 30;
+constexpr uint64_t CR0_PG            = 1 << 31;
+constexpr uint64_t CR4_PAE           = 1 << 5;
+constexpr uint64_t RF_INIT           = 1 << 2;
 
-constexpr uint64_t RF_INIT   = 1 << 2;
+constexpr uint16_t SEG_DESC_SELECTOR_TI_GDT     = 0 << 2;
+constexpr uint16_t SEG_DESC_SELECTOR_TI_LDT     = 1 << 2;
+constexpr uint8_t  SEG_DESC_SELECTOR_IDX_SHIFT  = 3;
+constexpr uint16_t SEG_DESC_SELECTOR_RPL_KERNEL = 0;
+constexpr uint8_t  SEG_DESC_TYPE_CODE_A         = 1;       // accessed
+constexpr uint8_t  SEG_DESC_TYPE_CODE_R         = 1 << 1;  // read
+constexpr uint8_t  SEG_DESC_TYPE_CODE_C         = 1 << 2;  // conforming
+constexpr uint8_t  SEG_DESC_TYPE_CODE           = 1 << 3;
+constexpr uint8_t  SEG_DESC_TYPE_DATA_A         = 1;
+constexpr uint8_t  SEG_DESC_TYPE_DATA_W         = 1 << 1;
+constexpr uint8_t  SEG_DESC_TYPE_DATA_E         = 1 << 2;
+constexpr uint8_t  SEG_DESC_TYPE_DATA           = 0 << 3;
+constexpr uint8_t  SEG_DESC_TYPE_FLAG_CD        = 1;
+constexpr uint8_t  SEG_DESC_DPL_KERNEL          = 0;
+constexpr uint8_t  SEG_DESC_DB_EX_LSET          = 0;
+constexpr uint8_t  SEG_DESC_L_64BIT_MODE        = 1;
+constexpr uint8_t  SEG_DESC_GRAN_4KB            = 1;
+constexpr uint64_t MSR_IA32_EFER_LME            = 1 << 8;
+constexpr uint64_t MSR_IA32_EFER_LMA            = 1 << 10;
+
 
 struct vcpu_regs {
     uint64_t rax, rbx, rcd, rdx;
@@ -46,8 +65,8 @@ struct segment_descriptor {
     uint16_t selector;
     uint8_t  type;
     uint8_t  present, dpl, db, s, l, g, avl;
-    uint8_t  unsusable;
-    uint8_t  padding;
+    uint8_t  unsusable = 0;
+    uint8_t  padding = 0;
 };
 
 struct vcpu_sregs {

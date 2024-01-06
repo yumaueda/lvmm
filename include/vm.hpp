@@ -27,7 +27,7 @@ struct vm_config {
     const char *kernel_path;
     const char *initramfs_path;
     /*
-     * padding: 
+     * padding:
      *   I don't know why, but without padding,
      *   the offset of the vm_config structure member
      *   after vcpu_num in the VM class is accessed with 4Byte less
@@ -44,7 +44,9 @@ class VM : public BaseClass {
 
         int initMachine();
         int initRAM(std::string cmdline);
-        int initVcpuRegs(bool is_elfclass64);
+        int initVcpuRegs();
+        int createPageTable();
+        int initVcpuSregs(bool is_64bit);
 
     private:
         KVM& kvm;

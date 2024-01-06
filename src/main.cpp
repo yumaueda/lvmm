@@ -27,7 +27,6 @@ int main() {
         return -1;
     }
 
-
     r = vm->initMachine();
     if (r) {
         std::cerr << "vm->initMachine() failed" << std::endl;
@@ -40,9 +39,22 @@ int main() {
         return -1;
     }
 
-    r = vm->initVcpuRegs(false);
+    r = vm->initVcpuRegs();
     if (r) {
         std::cerr << "vm->initVcpuRegs() failed" << std::endl;
+        return -1;
+    }
+
+    r = vm->createPageTable();
+    if (r) {
+        std::cerr << "vm->createPageTable() failed" << std::endl;
+        return -1;
+    }
+    std::cout << "VM::createPageTable is currently just a dummy" << std::endl;
+
+    r = vm->initVcpuSregs(false);
+    if (r) {
+        std::cerr << "vm->initVcpuSregs() failed" << std::endl;
         return -1;
     }
 

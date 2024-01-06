@@ -22,6 +22,7 @@ constexpr int      SECT_SIZE           = 512;
 constexpr uint64_t REALMODE_IVT_START  = 0x0000'0000;
 constexpr uint32_t BOOT_PARAMS_ADDR    = 0x0001'0000;
 constexpr uint32_t COMMANDLINE_ADDR    = 0x0002'0000;
+constexpr uint32_t PAGETABLE_BASE      = 0x0003'0000;
 constexpr uint32_t EBDA_START          = 0x0009'fc00;
 constexpr uint32_t VGARAM_START        = 0x000a'0000;
 constexpr uint32_t MBBIOS_START        = 0x000f'0000;

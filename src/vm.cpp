@@ -136,28 +136,6 @@ int VM::initRAM(std::string cmdline) {
     std::cout << "ebda_data copied to guest RAM: " << ebda_start << std::endl;
     std::cout << "ebda_end: " << ebda_end << std::endl;
 
-    // TODO:
-    // REF L159: we should load setup header first cuz we don't know
-    // max command line size till we do it.
-    // - [ ]  0. set virtio-net up (we won't do it for now)
-    //
-    // <--- in another func
-    //
-    // ---> in this func
-    // - [ ]  1. poisoning the guest RAM for debugging here (optional)
-    // - [x]  2. copy command line to guest RAM. make sure it is null-terminated!
-    // - [x]  3. get the size of initramfs and copy it to guest RAM
-    // - [x]  4. read bootparam setup header data from kernel
-    // - [x]  5. write into bootparam e820 entries / setup header
-    // - [x]  6. bootparam into guest RAM
-    // - [ ]  7. copy protected-mode kernel into guest RAM
-    // <--- in this func
-    //
-    // in another func --->
-    // - [ ]  8. init vCPUs regs
-    // - [ ]  9. add devs cmos noop
-    // - [ ] 10. init ioporthandler
-
     // initramfs
     ramdisk_size = get_ifs_size(initramfs);
     std::cout << "initramfs size: " << ramdisk_size << std::endl;
@@ -240,12 +218,24 @@ int VM::initRAM(std::string cmdline) {
     return 0;
 }
 
-int VM::initVcpuRegs(bool is_elfclass64 = false) {  // tmp
-    assert(!is_elfclass64);
+int VM::initVcpuRegs() {
     for (int i = 0; i < vm_conf.vcpu_num; ++i) {
         if ((vcpus+i)->InitRegs(HIGHMEM_BASE, BOOT_PARAMS_ADDR))
             return 1;
-        if ((vcpus+i)->InitSregs(is_elfclass64))
+    }
+    std::cout << "VM::" << __func__ << ": success" << std::endl;
+    return 0;
+}
+
+int VM::createPageTable() {
+    // dummy
+    return 0;
+};
+
+int VM::initVcpuSregs(bool is_64bit) {
+    assert(!is_64bit);
+    for (int i = 0; i < vm_conf.vcpu_num; ++i) {
+        if ((vcpus+i)->InitSregs(is_64bit))
             return 1;
     }
     std::cout << "VM::" << __func__ << ": success" << std::endl;

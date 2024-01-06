@@ -54,32 +54,50 @@ int Vcpu::InitRegs(uint64_t rip, uint64_t rsi) {
     return 0;
 }
 
-int Vcpu::InitSregs(bool is_elfclass64) {
-    assert(!is_elfclass64);
+int Vcpu::InitSregs(bool is_64bit) {
+    assert(!is_64bit);
 
     int r;
-    vcpu_sregs  sregs;
+    vcpu_sregs sregs;
+    segment_descriptor cs = {
+        .base     = 0,
+        .limit    = 0xffff'ffff,
+        .selector = 1 << SEG_DESC_SELECTOR_IDX_SHIFT
+                  | SEG_DESC_SELECTOR_TI_GDT
+                  | SEG_DESC_SELECTOR_RPL_KERNEL,
+        .type     = SEG_DESC_TYPE_CODE
+                  | SEG_DESC_TYPE_CODE_A
+                  | SEG_DESC_TYPE_CODE_R,
+        .present  = 1,
+        .dpl      = SEG_DESC_DPL_KERNEL,
+        .db       = SEG_DESC_DB_EX_LSET,    // .db must be cleared when .l=1
+        .s        = SEG_DESC_TYPE_FLAG_CD,
+        .l        = SEG_DESC_L_64BIT_MODE,
+        .g        = SEG_DESC_GRAN_4KB,
+        .avl      = 0,
+    };
+
+    segment_descriptor others = cs;
+    others.selector = 2 << SEG_DESC_SELECTOR_IDX_SHIFT
+        | SEG_DESC_SELECTOR_TI_GDT
+        | SEG_DESC_SELECTOR_RPL_KERNEL;
+    others.type = SEG_DESC_TYPE_DATA
+        | SEG_DESC_TYPE_DATA_A
+        | SEG_DESC_TYPE_DATA_W;
 
     if ((r = GetSregs(&sregs)))
         return r;
 
-    //sregs.CR3 =
-    sregs.cr4 = CR4_PAE;
-    sregs.cr0 = CR0_PE | CR0_MP | CR0_ET | CR0_NE | CR0_WP | CR0_AM | CR0_PG;
-
-    // MSR.IA32_EFER = 
-    // sregs.CS
-    // sregs.DS
-    // sregs.ES
-    // sregs.FS
-    // sregs.GS
-    // sregs.SS
+    // reconsider order
+    sregs.cr3  = PAGETABLE_BASE;
+    sregs.cr4  = CR4_PAE;
+    sregs.cr0  = CR0_PE | CR0_MP | CR0_ET | CR0_NE | CR0_WP | CR0_AM | CR0_PG;
+    sregs.efer = MSR_IA32_EFER_LME | MSR_IA32_EFER_LMA;
+    sregs.cs   = cs;
+    sregs.ds = sregs.es = sregs.fs = sregs.gs = sregs.ss = others;
 
     if ((r = SetSregs(&sregs)))
         return r;
-
-    std::cout << "Vcpu::" << __func__
-        << ": incomplete implementation!!" << std::endl;
 
     return 0;
 }
