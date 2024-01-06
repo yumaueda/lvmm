@@ -44,6 +44,7 @@ class VM : public BaseClass {
 
         int initMachine();
         int initRAM(std::string cmdline);
+        int initVcpuRegs(bool is_elfclass64);
 
     private:
         KVM& kvm;

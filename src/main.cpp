@@ -40,5 +40,11 @@ int main() {
         return -1;
     }
 
+    r = vm->initVcpuRegs(false);
+    if (r) {
+        std::cerr << "vm->initVcpuRegs() failed" << std::endl;
+        return -1;
+    }
+
     return 0;
 }

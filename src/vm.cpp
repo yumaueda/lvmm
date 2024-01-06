@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -236,6 +237,18 @@ int VM::initRAM(std::string cmdline) {
 
     std::cout << "VM::" << __func__ << ": success" << std::endl;
 
+    return 0;
+}
+
+int VM::initVcpuRegs(bool is_elfclass64 = false) {  // tmp
+    assert(!is_elfclass64);
+    for (int i = 0; i < vm_conf.vcpu_num; ++i) {
+        if ((vcpus+i)->InitRegs(HIGHMEM_BASE, BOOT_PARAMS_ADDR))
+            return 1;
+        if ((vcpus+i)->InitSregs(is_elfclass64))
+            return 1;
+    }
+    std::cout << "VM::" << __func__ << ": success" << std::endl;
     return 0;
 }
 
