@@ -85,10 +85,6 @@ class Vcpu : public BaseClass {
         const int cpu_id;
 
         kvm_run* run = static_cast<kvm_run*>(nullptr);
-
-        vcpu_regs  regs;
-        vcpu_sregs sregs;
-        vcpu_dregs dregs;
 };
 
 
