@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <linux/kvm.h>
 #include <boot.hpp>
+#include <paging.hpp>
 #include <util.hpp>
 #include <vm.hpp>
 
@@ -228,7 +229,42 @@ int VM::initVcpuRegs() {
 }
 
 int VM::createPageTable() {
-    // dummy
+    PTE   pml4e, pdpte, pde;
+    char* pagetable_start = reinterpret_cast<char*>(ram_start);
+    PTE*  pml4_start      = reinterpret_cast<PTE*>(pagetable_start);
+    PTE*  pdpte_start     = reinterpret_cast<PTE*>(
+                                pagetable_start+PAGE_SIZE_4KB);
+    PTE*  pde_start       = reinterpret_cast<PTE*>(
+                                pagetable_start+PAGE_SIZE_4KB*2);
+
+    assert(~PL4_ADDR_MASK && reinterpret_cast<uint64_t>(pagetable_start));
+
+    // 6 pages (0x1000*6 = 0x6000 bytes) are used for the boot page table
+    // to straight map 0-4GiB memory area.
+    std::memset(pagetable_start, 0, BOOT_PAGETABLE_SIZE);
+
+    // PML4E
+    pml4e  = PAGE_FLAG_PCD | PAGE_FLAG_RW | PAGE_FLAG_P;
+    pml4e += reinterpret_cast<uint64_t>(pml4_start) + PAGE_SIZE_4KB;
+    *pml4_start = pml4e;
+
+    // PDPTE
+    pdpte  = PAGE_FLAG_PCD | PAGE_FLAG_RW | PAGE_FLAG_P;
+    pdpte += reinterpret_cast<uint64_t>(pdpte_start);
+    for (int i = 0 ; i < BOOT_PDPTE_NUM; ++i) {
+        pdpte += PAGE_SIZE_4KB;
+        *(pdpte_start+i) = pdpte;
+    }
+
+    // PTE
+    pde = PAGE_FLAG_G | PAGE_FLAG_PS | PAGE_FLAG_RW | PAGE_FLAG_P;
+    for (int i = 0; i < BOOT_PDE_NUM; ++i) {
+        *(pde_start+i) = pde;
+        pde += PAGE_SIZE_2MB;
+    }
+
+    std::cout << "VM::" << __func__ << ": success" << std::endl;
+
     return 0;
 };
 

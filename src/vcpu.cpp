@@ -2,10 +2,9 @@
 #include <iostream>
 #include <sys/mman.h>
 #include <unistd.h>
-
 #include <linux/kvm.h>
-
 #include <kvm.hpp>
+#include <paging.hpp>
 #include <vcpu.hpp>
 
 
@@ -89,7 +88,10 @@ int Vcpu::InitSregs(bool is_64bit) {
         return r;
 
     // reconsider order
-    sregs.cr3  = PAGETABLE_BASE;
+    //
+    // CR0.PG=1,  CR0.PE=1 ------------------------> Paging Enabled
+    // CR4.PAE=1, MSR.IA32_EFER.LME=1, CR4.LA57=0 -> 4-Level Paging
+    sregs.cr3  = BOOT_PAGETABLE_BASE;
     sregs.cr4  = CR4_PAE;
     sregs.cr0  = CR0_PE | CR0_MP | CR0_ET | CR0_NE | CR0_WP | CR0_AM | CR0_PG;
     sregs.efer = MSR_IA32_EFER_LME | MSR_IA32_EFER_LMA;

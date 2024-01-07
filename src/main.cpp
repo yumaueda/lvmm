@@ -50,7 +50,6 @@ int main() {
         std::cerr << "vm->createPageTable() failed" << std::endl;
         return -1;
     }
-    std::cout << "VM::createPageTable is currently just a dummy" << std::endl;
 
     r = vm->initVcpuSregs(false);
     if (r) {

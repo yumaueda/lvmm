@@ -26,6 +26,7 @@ include = include/baseclass.hpp \
 		  include/boot.hpp \
 		  include/cpufeat.hpp \
 		  include/kvm.hpp \
+		  include/paging.hpp \
 		  include/vcpu.hpp \
 		  include/vm.hpp
 
