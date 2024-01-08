@@ -1,9 +1,17 @@
-#ifndef CPUFEAT_HPP
-#define CPUFEAT_HPP
+/*
+ *  include/cpufeat.hpp
+ *
+ *  Copyright (C) 2023  Yuma Ueda <cyan@0x00a1e9.dev>
+ */
+
+
+#ifndef INCLUDE_CPUFEAT_HPP_
+#define INCLUDE_CPUFEAT_HPP_
 
 
 #include <cstdint>
 #include <stdexcept>
+#include <string>
 
 
 // Intel
@@ -26,13 +34,13 @@ struct cpuid_regs {
     uint32_t eax, ebx, ecx, edx;
 };
 
-static inline void cpuid(cpuid_regs& regs) {
+static inline void cpuid(cpuid_regs* regs) {
     asm volatile("cpuid" :
-            "=a" (regs.eax),
-            "=b" (regs.ebx),
-            "=c" (regs.ecx),
-            "=d" (regs.edx) :
-            "0" (regs.eax), "2" (regs.ecx));
+            "=a" (regs->eax),
+            "=b" (regs->ebx),
+            "=c" (regs->ecx),
+            "=d" (regs->edx) :
+             "0" (regs->eax), "2" (regs->ecx));
 }
 
 bool cpuSupportsVM() {
@@ -41,7 +49,7 @@ bool cpuSupportsVM() {
     uint32_t eax_feat;
     int feat_vm_shift;
 
-    cpuid(regs);
+    cpuid(&regs);
 
     switch (regs.ebx) {
         case VIS_INTEL_EBX:
@@ -50,7 +58,9 @@ bool cpuSupportsVM() {
                 feat_vm_shift = INTEL_FEAT_VMX_SHIFT;
                 break;
             } else {
-                throw std::runtime_error(std::string(__func__) + ": Invalid VIS returned. regs.ebx is from Intel, but others are not.");
+                throw std::runtime_error(std::string(__func__) + ": "
+                        "Invalid VIS returned. "
+                        "regs.ebx is from Intel, but others are not.");
                 return false;
             }
         case VIS_AMD_EBX:
@@ -59,26 +69,30 @@ bool cpuSupportsVM() {
                 feat_vm_shift = AMD_FEAT_SVM_SHIFT;
                 break;
             } else {
-                throw std::runtime_error(std::string(__func__) + ": Invalid VIS returned. regs.ebx is from AMD, but others are not.");
+                throw std::runtime_error(std::string(__func__) + ": "
+                        "Invalid VIS returned. "
+                        "regs.ebx is from AMD, but others are not.");
                 return false;
             }
             break;
         default:
-            throw std::runtime_error(std::string(__func__) + ": VIS couldn't be identified returned.");
+            throw std::runtime_error(std::string(__func__) + ": "
+                    "VIS couldn't be identified returned.");
             return false;
     }
 
     if (regs.eax < eax_feat) {
-        throw std::runtime_error(std::string(__func__) + ": Getting feature information is not supported.");
+        throw std::runtime_error(std::string(__func__) + ": "
+                "Getting feature information is not supported.");
         return false;
     }
 
 
     regs = { eax_feat, 0, 0, 0 };
-    cpuid(regs);
+    cpuid(&regs);
 
     return regs.ecx & 1 << feat_vm_shift;
 }
 
 
-#endif  // CPUFEAT_HPP
+#endif  // INCLUDE_CPUFEAT_HPP_
