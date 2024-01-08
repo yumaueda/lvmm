@@ -1,5 +1,6 @@
 AR := tar
 CXX := g++
+CPPLINT := cpplint
 CFLAGS := -Wall -Wextra -Werror --std=c++17 -I include
 CFLAGS_DEBUG := -g -DMONITOR_IOCTL
 
@@ -70,8 +71,10 @@ lmigtester_debug: $(src) $(include)
 lmigtester: $(src) $(include)
 	$(CXX) $(CFLAGS) $(src) -o $@
 
+lint: $(src) $(include)
+	$(CPPLINT) $^
 
-.PHONY: clean tag
+.PHONY: clean tag lint
 
 clean:
 	rm -f lmigtester lmigtester_debug initramfs unittest unittest_debug peda-session-* .gdb_history tags
