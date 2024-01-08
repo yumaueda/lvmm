@@ -118,7 +118,7 @@ int Vcpu::Run() {
     int r;
 
     if ((r = kvmIoctl(KVM_RUN, 0))) {
-        if (errno != EAGAIN || errno != EINTR) {
+        if (errno != EAGAIN && errno != EINTR) {
             perror("Vcpu::run()");
             return r;
         }
