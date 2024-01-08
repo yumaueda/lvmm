@@ -1,6 +1,6 @@
 # lmigtester
 
-An Expretimental VMM for Hardware Accelerated Live Migration.
+An Experimental VMM for Hardware Accelerated Live Migration.
 
 ## Memory Layout
 
