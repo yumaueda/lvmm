@@ -229,13 +229,16 @@ int VM::initVcpuRegs() {
 }
 
 int VM::createPageTable() {
-    PTE   pml4e, pdpte, pde;
-    char* pagetable_start = reinterpret_cast<char*>(ram_start);
-    PTE*  pml4_start      = reinterpret_cast<PTE*>(pagetable_start);
-    PTE*  pdpte_start     = reinterpret_cast<PTE*>(
-                                pagetable_start+PAGE_SIZE_4KB);
-    PTE*  pde_start       = reinterpret_cast<PTE*>(
-                                pagetable_start+PAGE_SIZE_4KB*2);
+    char*    pagetable_start = reinterpret_cast<char*>(ram_start)
+                                    + BOOT_PAGETABLE_BASE;
+    PTE*     pml4_start      = reinterpret_cast<PTE*>(pagetable_start);
+    PTE*     pdpte_start     = reinterpret_cast<PTE*>(
+                                    pagetable_start+PAGE_SIZE_4KB);
+    PTE*     pde_start       = reinterpret_cast<PTE*>(
+                                    pagetable_start+PAGE_SIZE_4KB*2);
+    uint64_t pml4_start_gpa  = BOOT_PAGETABLE_BASE;
+    uint64_t pdpte_start_gpa = BOOT_PAGETABLE_BASE+PAGE_SIZE_4KB;
+    PTE      pml4e, pdpte, pde;
 
     assert(~PL4_ADDR_MASK && reinterpret_cast<uint64_t>(pagetable_start));
 
@@ -245,12 +248,12 @@ int VM::createPageTable() {
 
     // PML4E
     pml4e  = PAGE_FLAG_PCD | PAGE_FLAG_RW | PAGE_FLAG_P;
-    pml4e += reinterpret_cast<uint64_t>(pml4_start) + PAGE_SIZE_4KB;
+    pml4e += pml4_start_gpa + PAGE_SIZE_4KB;
     *pml4_start = pml4e;
 
     // PDPTE
     pdpte  = PAGE_FLAG_PCD | PAGE_FLAG_RW | PAGE_FLAG_P;
-    pdpte += reinterpret_cast<uint64_t>(pdpte_start);
+    pdpte += pdpte_start_gpa;
     for (int i = 0 ; i < BOOT_PDPTE_NUM; ++i) {
         pdpte += PAGE_SIZE_4KB;
         *(pdpte_start+i) = pdpte;
