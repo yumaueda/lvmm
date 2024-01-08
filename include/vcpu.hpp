@@ -99,18 +99,21 @@ class Vcpu : public BaseClass {
     explicit Vcpu(int vcpu_fd, KVM* kvm, int cpu_id);
     ~Vcpu();
 
-    int InitRegs(uint64_t rip, uint64_t rsi);
-    int InitSregs(bool is_elfclass64);
     int GetRegs(vcpu_regs *regs);
     int GetSregs(vcpu_sregs *sregs);
     int SetRegs(vcpu_regs *regs);
     int SetSregs(vcpu_sregs *sregs);
+    int InitRegs(uint64_t rip, uint64_t rsi);
+    int InitSregs(bool is_elfclass64);
 
  private:
     KVM* kvm;
     const int cpu_id;
 
     kvm_run* run = static_cast<kvm_run*>(nullptr);
+
+    int  Run();
+    bool RunOnce();
 };
 
 
