@@ -1,11 +1,20 @@
-#include <cassert>
-#include <iostream>
+/*
+ *  src/vcpu.cpp
+ *
+ *  Copyright (C) 2023  Yuma Ueda <cyan@0x00a1e9.dev>
+ */
+
+
+#include <vcpu.hpp>
+
 #include <sys/mman.h>
 #include <unistd.h>
 #include <linux/kvm.h>
+
+#include <cassert>
+#include <iostream>
+
 #include <kvm.hpp>
-#include <paging.hpp>
-#include <vcpu.hpp>
 
 
 int Vcpu::GetRegs(vcpu_regs *regs) {
@@ -104,11 +113,11 @@ int Vcpu::InitSregs(bool is_64bit) {
     return 0;
 }
 
-Vcpu::Vcpu(int vcpu_fd, KVM& kvm, int cpu_id)
+Vcpu::Vcpu(int vcpu_fd, KVM* kvm, int cpu_id)
     : BaseClass(vcpu_fd), kvm(kvm), cpu_id(cpu_id) {
     std::cout << "Constructing Vcpu..." << std::endl;
 
-    run = static_cast<struct kvm_run*>(mmap(NULL, kvm.mmap_size
+    run = static_cast<struct kvm_run*>(mmap(NULL, kvm->mmap_size
                 , PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
     if (run == MAP_FAILED) {
         perror("Vcpu.run: mmap");

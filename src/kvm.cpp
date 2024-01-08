@@ -1,11 +1,22 @@
+/*
+ *  src/kvm.cpp
+ *
+ *  Copyright (C) 2023  Yuma Ueda <cyan@0x00a1e9.dev>
+ */
+
+
+#include <kvm.hpp>
+
+#include <unistd.h>
+
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
-#include <unistd.h>
+#include <string>
+
 #include <cpufeat.hpp>
-#include <kvm.hpp>
 
 
 int KVM::kvmCreateVM(VM** ptr_vm, vm_config vm_conf) {
@@ -34,7 +45,7 @@ int KVM::kvmCreateVM(VM** ptr_vm, vm_config vm_conf) {
         return r;
     } else {
         std::cout << "KVM::" << __func__ << ": " << r << std::endl;
-        *ptr_vm = new VM(r, *this, vm_conf);
+        *ptr_vm = new VM(r, this, vm_conf);
     }
 
     return r;

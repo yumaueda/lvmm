@@ -1,8 +1,15 @@
-#ifndef VCPU_HPP
-#define VCPU_HPP
+/*
+ *  include/vcpu.hpp
+ *
+ *  Copyright (C) 2023  Yuma Ueda <cyan@0x00a1e9.dev>
+ */
+
+#ifndef INCLUDE_VCPU_HPP_
+#define INCLUDE_VCPU_HPP_
 
 
 #include <linux/kvm.h>
+
 #include <baseclass.hpp>
 #include <kvm.hpp>
 
@@ -88,23 +95,23 @@ struct vcpu_dregs {
 };
 
 class Vcpu : public BaseClass {
-    public:
-        explicit Vcpu(int vcpu_fd, KVM& kvm, int cpu_id);
-        ~Vcpu();
+ public:
+    explicit Vcpu(int vcpu_fd, KVM* kvm, int cpu_id);
+    ~Vcpu();
 
-        int InitRegs(uint64_t rip, uint64_t rsi);
-        int InitSregs(bool is_elfclass64);
-        int GetRegs(vcpu_regs *regs);
-        int GetSregs(vcpu_sregs *sregs);
-        int SetRegs(vcpu_regs *regs);
-        int SetSregs(vcpu_sregs *sregs);
+    int InitRegs(uint64_t rip, uint64_t rsi);
+    int InitSregs(bool is_elfclass64);
+    int GetRegs(vcpu_regs *regs);
+    int GetSregs(vcpu_sregs *sregs);
+    int SetRegs(vcpu_regs *regs);
+    int SetSregs(vcpu_sregs *sregs);
 
-    private:
-        KVM& kvm;
-        const int cpu_id;
+ private:
+    KVM* kvm;
+    const int cpu_id;
 
-        kvm_run* run = static_cast<kvm_run*>(nullptr);
+    kvm_run* run = static_cast<kvm_run*>(nullptr);
 };
 
 
-#endif  // VCPU_HPP
+#endif  // INCLUDE_VCPU_HPP_

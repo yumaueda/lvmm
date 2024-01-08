@@ -1,3 +1,16 @@
+/*
+ *  src/vm.cpp
+ *
+ *  Copyright (C) 2023  Yuma Ueda <cyan@0x00a1e9.dev>
+ */
+
+
+#include <vm.hpp>
+
+#include <sys/mman.h>
+#include <unistd.h>
+#include <linux/kvm.h>
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -9,13 +22,10 @@
 #include <new>
 #include <stdexcept>
 #include <string>
-#include <sys/mman.h>
-#include <unistd.h>
-#include <linux/kvm.h>
+
 #include <boot.hpp>
 #include <paging.hpp>
 #include <util.hpp>
-#include <vm.hpp>
 
 
 int VM::allocGuestRAM() {
@@ -65,7 +75,8 @@ int VM::setUserMemRegion() {
 
 int VM::createVcpu() {
     int r;
-    vcpus = (Vcpu*)operator new[](vm_conf.vcpu_num*sizeof(Vcpu));
+    vcpus = reinterpret_cast<Vcpu*>(
+                operator new[](vm_conf.vcpu_num*sizeof(Vcpu)));
     std::cout << "VM::vcpus: " << vcpus << std::endl;
 
     for (int i = 0; i < vm_conf.vcpu_num; i++) {
@@ -164,26 +175,32 @@ int VM::initRAM(std::string cmdline) {
     kernel.read(reinterpret_cast<char*>(&bp.header), sizeof(bp.header));
     if (!kernel) {
         kernel.seekg(0, std::ios::beg);
-        std::cerr << "Couldn't read a setup header from the kernel image" << std::endl;
+        std::cerr << "Couldn't read a setup header "
+            "from the kernel image" << std::endl;
         return 1;
     }
     kernel.seekg(0, std::ios::beg);
-    std::cout << "bootparam setup header has been loaded from the kernel image" << std::endl;
+    std::cout << "bootparam setup header has been "
+        "loaded from the kernel image" << std::endl;
 
     if (bp.header.is_valid()) {
         std::cout << "bootparam setup header is valid" << std::endl;
     } else {
-        std::cerr << "bootparam setup header is invalid or the boot protocol version is old" << std::endl;
+        std::cerr << "bootparam setup header is invalid "
+            "or the boot protocol version is old" << std::endl;
         return 1;
     }
 
     if (bp.header.check_setup_sects())
-        std::cout << "The value of setup_sects has been modified to 4" << std::endl;
+        std::cout << "The value of setup_sects has been "
+            "modified to 4" << std::endl;
 
     std::cout << "Writing to bootparam..." << std::endl;
 
-    bp.add_e820_entry(REALMODE_IVT_START, EBDA_START-REALMODE_IVT_START, BOOT_E820_TYPE_RAM);
-    bp.add_e820_entry(EBDA_START, VGARAM_START-EBDA_START, BOOT_E820_TYPE_RESERVED);
+    bp.add_e820_entry(REALMODE_IVT_START,
+            EBDA_START-REALMODE_IVT_START, BOOT_E820_TYPE_RAM);
+    bp.add_e820_entry(EBDA_START,
+            VGARAM_START-EBDA_START, BOOT_E820_TYPE_RESERVED);
     bp.add_e820_entry(MBBIOS_START, MBBIOS_SIZE, BOOT_E820_TYPE_RESERVED);
     bp.add_e820_entry(HIGHMEM_BASE, vm_conf.ram_size, BOOT_E820_TYPE_RAM);
 
@@ -269,7 +286,7 @@ int VM::createPageTable() {
     std::cout << "VM::" << __func__ << ": success" << std::endl;
 
     return 0;
-};
+}
 
 int VM::initVcpuSregs(bool is_64bit) {
     assert(!is_64bit);
@@ -281,7 +298,7 @@ int VM::initVcpuSregs(bool is_64bit) {
     return 0;
 }
 
-VM::VM(int vm_fd, KVM& kvm, vm_config vm_conf)\
+VM::VM(int vm_fd, KVM* kvm, vm_config vm_conf)\
         : BaseClass(vm_fd), kvm(kvm), vm_conf(vm_conf) {
     std::cout << "Constructing VM..." << std::endl;
 

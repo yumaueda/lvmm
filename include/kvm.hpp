@@ -1,13 +1,24 @@
-#ifndef KVM_HPP
-#define KVM_HPP
+/*
+ *  include/kvm.hpp
+ *
+ *  Copyright (C) 2023  Yuma Ueda <cyan@0x00a1e9.dev>
+ */
 
-#include <cstdio>
-#include <cerrno>
+
+#ifndef INCLUDE_KVM_HPP_
+#define INCLUDE_KVM_HPP_
+
+
 #include <fcntl.h>
-#include <iostream>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <linux/kvm.h>
+
+#include <cstdio>
+#include <cerrno>
+#include <iostream>
+#include <string>
+
 #include <baseclass.hpp>
 #include <vm.hpp>
 
@@ -27,6 +38,7 @@ constexpr const int KVM_CAP_CHECK[] = {
     KVM_CAP_COALESCED_MMIO,
 };
 
+
 struct kvm_cap {
     int immediate_exit;
     int nr_slots;
@@ -37,32 +49,32 @@ struct kvm_cap {
 };
 
 class KVM : public BaseClass {
-    public:
-        explicit KVM(int fd);
-        ~KVM();
+ public:
+    explicit KVM(int fd);
+    ~KVM();
 
-        int mmap_size;
+    int mmap_size;
 
-        static int getKVMFD(){
-            int r;
+    static int getKVMFD() {
+        int r;
 
-            if ((r = open(DEV_KVM, O_RDWR)) < 0) {
-                perror(("KVM::" + std::string(__func__) + ": open").c_str());
-                return -errno;
-            }
-            std::cout << "KVM::" << __func__ << ": " << r << std::endl;
+        if ((r = open(DEV_KVM, O_RDWR)) < 0) {
+            perror(("KVM::" + std::string(__func__) + ": open").c_str());
+            return -errno;
+        }
+        std::cout << "KVM::" << __func__ << ": " << r << std::endl;
 
-            return r;
-        };
+        return r;
+    }
 
-        int kvmCreateVM(VM** ptr_vm, vm_config vm_conf);
+    int kvmCreateVM(VM** ptr_vm, vm_config vm_conf);
 
-    private:
-        int api_ver;
-        kvm_cap cap;
+ private:
+    int api_ver;
+    kvm_cap cap;
 
-        int kvmCapCheck();
+    int kvmCapCheck();
 };
 
 
-#endif  // KVM_HPP
+#endif  // INCLUDE_KVM_HPP_
