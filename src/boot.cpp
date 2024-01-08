@@ -1,3 +1,10 @@
+/*
+ *  src/boot.cpp
+ *
+ *  Copyright (C) 2023  Yuma Ueda <cyan@0x00a1e9.dev>
+ */
+
+
 #include <ios>
 #include <iostream>
 #include <boot.hpp>
@@ -57,7 +64,7 @@ void processor_entry_init(mpctable_processor_entry* entry_array,
     for (int i = 0; i < vcpu_num; ++i) {
         entry_array[i].local_apic_id = i;
         entry_array[i].cpu_flags |= MPCTE_PROC_CPUFLAGS_EN;
-        entry_array[i].cpu_flags |= i==0 ?
+        entry_array[i].cpu_flags |= i == 0 ?
             MPCTE_PROC_CPUFLAGS_BP : 0;
         entry_array[i].cpu_sig = MPCTE_PROC_CPUSIGNATURE;
     }

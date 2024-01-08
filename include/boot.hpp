@@ -1,5 +1,12 @@
-#ifndef BIOS_HPP
-#define BIOS_HPP
+/*
+ *  include/boot.hpp
+ *
+ *  Copyright (C) 2023  Yuma Ueda <cyan@0x00a1e9.dev>
+ */
+
+
+#ifndef INCLUDE_BOOT_HPP_
+#define INCLUDE_BOOT_HPP_
 
 
 #include <algorithm>
@@ -9,11 +16,11 @@
 #include <ios>
 #include <iostream>
 #include <string>
+
 #include <vm.hpp>
 
 
 class VM;
-
 
 
 constexpr int      PARAGRAPH_SIZE      = 16;
@@ -36,10 +43,10 @@ constexpr int      EBDA_PADDING_SIZE   = 16*3;
 
 constexpr int      MP_MAX_VCPU_NUM           = 32;
 constexpr uint8_t  MP_SPEC_REV_1_4           = 4;
-constexpr uint32_t MPFPS_INTEL_SIGNATURE     = static_cast<uint32_t>('_')<<24
-                                              |static_cast<uint32_t>('P')<<16
-                                              |static_cast<uint32_t>('M')<< 8
-                                              |static_cast<uint32_t>('_');
+constexpr uint32_t MPFPS_INTEL_SIGNATURE     = static_cast<uint32_t>('_') << 24
+                                             | static_cast<uint32_t>('P') << 16
+                                             | static_cast<uint32_t>('M') << 8
+                                             | static_cast<uint32_t>('_') << 0;
 constexpr uint8_t  MPFPS_LENGTH              = 1;
 constexpr uint8_t  MPFPS_SPEC_REV_1_4        = MP_SPEC_REV_1_4;
 constexpr uint8_t  MPFPS_FEAT_CTPRESENT      = 0;
@@ -47,19 +54,19 @@ constexpr uint8_t  MPFPS_FEAT_VIRTWIRE       = 0;
 constexpr uint16_t MPCTABLE_HEADER_LENGTH    = 44;
 constexpr uint16_t MPCTABLE_LENGTH           = MPCTABLE_HEADER_LENGTH
                                                 +20*MP_MAX_VCPU_NUM;
-constexpr uint32_t MPCTABLE_INTEL_SIGNATURE  = static_cast<uint32_t>('P')<<24
-                                              |static_cast<uint32_t>('M')<<16
-                                              |static_cast<uint32_t>('C')<< 8
-                                              |static_cast<uint32_t>('P');
+constexpr uint32_t MPCTABLE_INTEL_SIGNATURE  = static_cast<uint32_t>('P') << 24
+                                             | static_cast<uint32_t>('M') << 16
+                                             | static_cast<uint32_t>('C') << 8
+                                             | static_cast<uint32_t>('P') << 0;
 constexpr uint8_t  MPCTABLE_SPEC_REV_1_4     = MP_SPEC_REV_1_4;
-constexpr uint64_t MPCTABLE_OEM_ID           = static_cast<uint64_t>('T')<<56
-                                              |static_cast<uint64_t>('S')<<48
-                                              |static_cast<uint64_t>('E')<<40
-                                              |static_cast<uint64_t>('T')<<32
-                                              |static_cast<uint64_t>('G')<<24
-                                              |static_cast<uint64_t>('I')<<16
-                                              |static_cast<uint64_t>('M')<< 8
-                                              |static_cast<uint64_t>('L')<< 0;
+constexpr uint64_t MPCTABLE_OEM_ID           = static_cast<uint64_t>('T') << 56
+                                             | static_cast<uint64_t>('S') << 48
+                                             | static_cast<uint64_t>('E') << 40
+                                             | static_cast<uint64_t>('T') << 32
+                                             | static_cast<uint64_t>('G') << 24
+                                             | static_cast<uint64_t>('I') << 16
+                                             | static_cast<uint64_t>('M') << 8
+                                             | static_cast<uint64_t>('L') << 0;
 constexpr uint8_t  MPCTE_ENTRY_TYPE_PROC     = 0;
 constexpr uint8_t  MPCTE_PROC_APIC_VER       = 0x14;
 constexpr uint8_t  MPCTE_PROC_CPUFLAGS_EN    = 0b0000'0001;
@@ -78,10 +85,10 @@ constexpr uint32_t BOOT_E820_TYPE_RESERVED = 2;
 constexpr int      SETUP_HEADER_ADDR       = 0x0000'01f1;
 constexpr uint16_t BOOT_HDR_VID_MODE_NML   = 0xffff;
 constexpr uint16_t BOOT_HDR_BOOT_FLAG      = 0xaaff;
-constexpr uint32_t BOOT_HDR_MAGIC          = static_cast<uint32_t>('S')<<24
-                                            |static_cast<uint32_t>('r')<<16
-                                            |static_cast<uint32_t>('d')<< 8
-                                            |static_cast<uint32_t>('H')<< 0;
+constexpr uint32_t BOOT_HDR_MAGIC          = static_cast<uint32_t>('S') << 24
+                                           | static_cast<uint32_t>('r') << 16
+                                           | static_cast<uint32_t>('d') << 8
+                                           | static_cast<uint32_t>('H') << 0;
 constexpr uint8_t  BOOT_HDR_BLT_UNDEFINED  = 0xff;
 constexpr uint8_t  BOOT_HDR_LF_HIGH        = 0b0000'0001;  // R
 constexpr uint8_t  BOOT_HDR_LF_KASLR       = 0b0000'0010;  // KI
@@ -216,12 +223,11 @@ struct boot_params {
     uint8_t      edd_mbr_sig_buf[BOOT_EDD_MBR_SIG_MAX] = { 0 };
     e820entry    e820map[BOOT_E820_MAP_MAX];
 
-    private:
-        void increment_e820_entry();
+ private:
+    void increment_e820_entry();
 
-    public:
-        void add_e820_entry(uint64_t addr, uint64_t size, uint32_t type);
-
+ public:
+    void add_e820_entry(uint64_t addr, uint64_t size, uint32_t type);
 };
 
 
@@ -236,7 +242,7 @@ uint8_t mp_gen_checksum(MpPtr mpptr) {
 template <typename MpPtr>
 bool is_mp_checksum_valid(MpPtr mpptr) {
     return !mp_calc_checksum(mpptr);
-};
+}
 
 #ifdef UNITTEST
 void processor_entry_init(
@@ -248,4 +254,4 @@ void processor_entry_init(
 ebda gen_ebda(const int vcpu_num);
 
 
-#endif  // BIOS_HPP
+#endif  // INCLUDE_BOOT_HPP_

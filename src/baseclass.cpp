@@ -1,6 +1,15 @@
-#include <iostream>
-#include <unistd.h>
+/*
+ *  src/baseclass.cpp
+ *
+ *  Copyright (C) 2023  Yuma Ueda <cyan@0x00a1e9.dev>
+ */
+
+
 #include <baseclass.hpp>
+
+#include <unistd.h>
+
+#include <iostream>
 
 
 BaseClass::BaseClass(int fd) : fd(fd) {}

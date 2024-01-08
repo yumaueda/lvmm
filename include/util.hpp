@@ -1,5 +1,12 @@
-#ifndef UTIL_HPP
-#define UTIL_HPP
+/*
+ *  include/util.hpp
+ *
+ *  Copyright (C) 2023  Yuma Ueda <cyan@0x00a1e9.dev>
+ */
+
+
+#ifndef INCLUDE_UTIL_HPP_
+#define INCLUDE_UTIL_HPP_
 
 
 #include <fstream>
@@ -40,4 +47,4 @@ static inline bool is_kernel_elf(std::ifstream& kernel) {
 };
 
 
-#endif  // UTIL_HPP
+#endif  // INCLUDE_UTIL_HPP_

@@ -1,8 +1,16 @@
+/*
+ *  src/main.cpp
+ *
+ *  Copyright (C) 2023  Yuma Ueda <cyan@0x00a1e9.dev>
+ */
+
+
 #include <cstdint>
 #include <iostream>
+
 #include <kvm.hpp>
-#include <vm.hpp>
 #include <vcpu.hpp>
+#include <vm.hpp>
 
 
 int main() {

@@ -1,5 +1,12 @@
-#ifndef PAGING_HPP
-#define PAGING_HPP
+/*
+ *  include/paging.hpp
+ *
+ *  Copyright (C) 2023  Yuma Ueda <cyan@0x00a1e9.dev>
+ */
+
+
+#ifndef INCLUDE_PAGING_HPP_
+#define INCLUDE_PAGING_HPP_
 
 
 using PTE = uint64_t;
@@ -18,8 +25,8 @@ constexpr uint64_t PAGE_FLAG_PAT       = 1 << 12;
 
 constexpr uint32_t PAGE_SHIFT_4KB      = 12;
 constexpr uint32_t PAGE_SHIFT_2MB      = 21;
-constexpr uint32_t PAGE_SIZE_4KB       = (2<<(PAGE_SHIFT_4KB-1));
-constexpr uint32_t PAGE_SIZE_2MB       = (2<<(PAGE_SHIFT_2MB-1));
+constexpr uint32_t PAGE_SIZE_4KB       = (2 << (PAGE_SHIFT_4KB-1));
+constexpr uint32_t PAGE_SIZE_2MB       = (2 << (PAGE_SHIFT_2MB-1));
 constexpr uint32_t BOOT_PAGETABLE_SIZE = PAGE_SIZE_4KB*6;
 
 constexpr int32_t  BOOT_PDPTE_NUM      = 4;
@@ -27,4 +34,4 @@ constexpr int32_t  BOOT_PDE_NUM        = 2048;
 constexpr uint64_t PL4_ADDR_MASK       = 0x0000'FFFF'FFFF'F000;
 
 
-#endif  // PAGING_HPP
+#endif  // INCLUDE_PAGING_HPP_
