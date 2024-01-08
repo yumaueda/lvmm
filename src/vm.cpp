@@ -245,16 +245,20 @@ int VM::initVcpuRegs() {
     return 0;
 }
 
-int VM::createPageTable() {
+int VM::createPageTable(uint64_t boot_pgtable_base, bool is_64bit_boot) {
+    if (is_64bit_boot) {
+        return 0;
+    }
+
     char*    pagetable_start = reinterpret_cast<char*>(ram_start)
-                                    + BOOT_PAGETABLE_BASE;
+                                    + boot_pgtable_base;
     PTE*     pml4_start      = reinterpret_cast<PTE*>(pagetable_start);
     PTE*     pdpte_start     = reinterpret_cast<PTE*>(
                                     pagetable_start+PAGE_SIZE_4KB);
     PTE*     pde_start       = reinterpret_cast<PTE*>(
                                     pagetable_start+PAGE_SIZE_4KB*2);
-    uint64_t pml4_start_gpa  = BOOT_PAGETABLE_BASE;
-    uint64_t pdpte_start_gpa = BOOT_PAGETABLE_BASE+PAGE_SIZE_4KB;
+    uint64_t pml4_start_gpa  = boot_pgtable_base;
+    uint64_t pdpte_start_gpa = boot_pgtable_base+PAGE_SIZE_4KB;
     PTE      pml4e, pdpte, pde;
 
     assert(~PL4_ADDR_MASK && reinterpret_cast<uint64_t>(pagetable_start));
@@ -288,10 +292,10 @@ int VM::createPageTable() {
     return 0;
 }
 
-int VM::initVcpuSregs(bool is_64bit) {
-    assert(!is_64bit);
+int VM::initVcpuSregs(bool is_64bit_boot) {
+    assert(!is_64bit_boot);
     for (int i = 0; i < vm_conf.vcpu_num; ++i) {
-        if ((vcpus+i)->InitSregs(is_64bit))
+        if ((vcpus+i)->InitSregs(is_64bit_boot))
             return 1;
     }
     std::cout << "VM::" << __func__ << ": success" << std::endl;

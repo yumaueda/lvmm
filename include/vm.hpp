@@ -55,7 +55,7 @@ class VM : public BaseClass {
     int initMachine();
     int initRAM(std::string cmdline);
     int initVcpuRegs();
-    int createPageTable();
+    int createPageTable(uint64_t boot_pgtable_base, bool is_64bit_boot);
     int initVcpuSregs(bool is_64bit);
 
  private:

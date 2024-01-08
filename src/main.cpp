@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <iostream>
 
+#include <boot.hpp>
 #include <kvm.hpp>
 #include <vcpu.hpp>
 #include <vm.hpp>
@@ -53,7 +54,7 @@ int main() {
         return -1;
     }
 
-    r = vm->createPageTable();
+    r = vm->createPageTable(BOOT_PAGETABLE_BASE, false);
     if (r) {
         std::cerr << "vm->createPageTable() failed" << std::endl;
         return -1;
