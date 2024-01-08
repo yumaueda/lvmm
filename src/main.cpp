@@ -23,6 +23,7 @@ int main() {
         .ram_size = static_cast<uint64_t>(1) << 30,
         .kernel_path = "bzImage",
         .initramfs_path = "initramfs",
+        .is_64bit_boot = false,
     };
 
     r = KVM::getKVMFD();

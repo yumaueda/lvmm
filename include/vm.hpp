@@ -36,6 +36,7 @@ struct vm_config {
     const uint64_t ram_size;  // in bytes
     const char *kernel_path;
     const char *initramfs_path;
+    const bool is_64bit_boot;
     /*
      * padding:
      *   I don't know why, but without padding,

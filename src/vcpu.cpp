@@ -63,7 +63,7 @@ int Vcpu::InitRegs(uint64_t rip, uint64_t rsi) {
 }
 
 int Vcpu::InitSregs(bool is_64bit_boot) {
-    assert(!is_64bit_boot);
+    assert(!is_64bit_boot);  // to be implemented
 
     int r;
     vcpu_sregs sregs;

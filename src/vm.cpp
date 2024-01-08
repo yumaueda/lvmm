@@ -223,6 +223,7 @@ int VM::initRAM(std::string cmdline) {
         << static_cast<void*>(boot_params_end) << std::endl;
 
     // kernel
+    assert(!vm_conf.is_64bit_boot);  // to be implemented
     kernel_size = (bp.header.setup_sects+1) * SECT_SIZE;
     if (!kernel.read(kernel_image, kernel_size)) {
         std::cerr << "couldn't load kernel image" << std::endl;
