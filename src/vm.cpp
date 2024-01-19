@@ -105,8 +105,8 @@ int VM::registerPIOHandler(uint16_t port_start, uint16_t port_end,
     std::cout << "VM::" << __func__
         << ": port_start: " << port_start
         << ": port_end: "   << port_end
-        << ": in_func: "    << in_func
-        << ": out_func: "   << out_func << std::endl;
+        << ": in_func: "    << reinterpret_cast<void*>(in_func)
+        << ": out_func: "   << reinterpret_cast<void*>(out_func) << std::endl;
 
     return 0;
 }
