@@ -128,7 +128,7 @@ int Vcpu::Run() {
     return r;
 }
 
-bool Vcpu::RunOnce() {
+int Vcpu::RunOnce() {
     Run();
 
     switch (run->exit_reason) {

@@ -113,8 +113,8 @@ class Vcpu : public BaseClass {
 
     kvm_run* run = static_cast<kvm_run*>(nullptr);
 
-    int  Run();
-    bool RunOnce();
+    int Run();
+    int RunOnce();
 };
 
 
