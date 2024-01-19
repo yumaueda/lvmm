@@ -112,10 +112,20 @@ int VM::registerPIOHandler(uint16_t port_start, uint16_t port_end,
 }
 
 int VM::initPIOHandler() {
+    // Fill pio_handler with default_pio_handler
     registerPIOHandler(0, PIO_PORT_NUM,
             default_pio_handler, default_pio_handler);
-    registerPIOHandler(PIO_PORT_RESET_GENERATOR, PIO_PORT_RESET_GENERATOR+1,
+    // VGA
+    registerPIOHandler(PIO_PORT_VGA_0_START, PIO_PORT_VGA_0_END,
+            do_nothing_pio_hanlder, do_nothing_pio_hanlder);
+    registerPIOHandler(PIO_PORT_VGA_1_START, PIO_PORT_VGA_1_END,
+            do_nothing_pio_hanlder, do_nothing_pio_hanlder);
+    // Reset Generator
+    registerPIOHandler(PIO_PORT_RST_GEN_START, PIO_PORT_RST_GEN_END,
             default_pio_handler, reset_generator_handler_out);
+
+
+    // PS2 controller setting may be needed on WSL2?
     return 0;
 }
 

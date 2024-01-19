@@ -140,7 +140,6 @@ bool Vcpu::RunOnce() {
             return false;
 
         case KVM_EXIT_IO:
-            // call the handler corresponding to the error here
             return true;
 
         case KVM_EXIT_MMIO:
