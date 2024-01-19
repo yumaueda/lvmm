@@ -60,9 +60,7 @@ class VM : public BaseClass {
     // FIX: should be in initRAM();
     int createPageTable(uint64_t boot_pgtable_base, bool is_64bit_boot);
     int initVcpuSregs(bool is_64bit);
-
-    int registerPIOHundler(uint16_t port_start, uint16_t port_end,
-            PIOHundler in_func, PIOHundler out_func);
+    int initPIOHundler();
 
     PIOHundler pio_hundler[PIO_PORT_NUM][2];
 
@@ -90,6 +88,9 @@ class VM : public BaseClass {
     int allocGuestRAM();
     int setUserMemRegion();
     int createVcpu();
+
+    int registerPIOHundler(uint16_t port_start, uint16_t port_end,
+            PIOHundler in_func, PIOHundler out_func);
 };
 
 

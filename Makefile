@@ -36,6 +36,7 @@ src = src/main.cpp \
 	  src/baseclass.cpp \
 	  src/boot.cpp \
 	  src/kvm.cpp \
+	  src/pio.cpp \
 	  src/vm.cpp \
 	  src/vcpu.cpp
 

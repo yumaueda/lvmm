@@ -313,6 +313,11 @@ int VM::registerPIOHundler(uint16_t port_start, uint16_t port_end,
     return 0;
 }
 
+int VM::initPIOHundler() {
+    registerPIOHundler(0, PIO_PORT_NUM, default_pio_hundler, default_pio_hundler);
+    return 0;
+}
+
 VM::VM(int vm_fd, KVM* kvm, vm_config vm_conf)\
         : BaseClass(vm_fd), kvm(kvm), vm_conf(vm_conf) {
     std::cout << "Constructing VM..." << std::endl;
