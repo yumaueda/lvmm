@@ -5,10 +5,10 @@
  */
 
 
+#include <pio.hpp>
+
 #include <cstdint>
 #include <iostream>
-
-#include <pio.hpp>
 
 
 int default_pio_handler(char*, uint8_t) {
