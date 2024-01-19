@@ -112,7 +112,10 @@ int VM::registerPIOHandler(uint16_t port_start, uint16_t port_end,
 }
 
 int VM::initPIOHandler() {
-    registerPIOHandler(0, PIO_PORT_NUM, default_pio_handler, default_pio_handler);
+    registerPIOHandler(0, PIO_PORT_NUM,
+            default_pio_handler, default_pio_handler);
+    registerPIOHandler(PIO_PORT_RESET_GENERATOR, PIO_PORT_RESET_GENERATOR+1,
+            default_pio_handler, reset_generator_handler_out);
     return 0;
 }
 
