@@ -12,7 +12,7 @@
 #include <cstdint>
 
 
-using PIOHandler = int(*)(uint16_t, char*, uint8_t);
+using PIOHandler = int(*)(char*, uint8_t);
 
 constexpr int      PIO_PORT_NUM           = 2^16;
 constexpr uint16_t PIO_PORT_RST_GEN_START = 0xCF9;
@@ -22,9 +22,9 @@ constexpr uint16_t PIO_PORT_VGA_0_END     = 0x3BC;  // 0x3B6?
 constexpr uint16_t PIO_PORT_VGA_1_START   = 0x3C0;
 constexpr uint16_t PIO_PORT_VGA_1_END     = 0x3E0;  // 0x3DB?
 
-int default_pio_handler(uint16_t, char*, uint8_t);
-int do_nothing_pio_hanlder(uint16_t, char*, uint8_t);
-int reset_generator_handler_out(uint16_t, char* data_ptr, uint8_t);
+int default_pio_handler(char*, uint8_t);
+int do_nothing_pio_handler(char*, uint8_t);
+int reset_generator_handler_out(char* data_ptr, uint8_t);
 
 
 #endif  // INCLUDE_PIO_HPP_

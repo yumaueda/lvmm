@@ -16,6 +16,7 @@
 #include <iostream>
 
 #include <kvm.hpp>
+#include <pio.hpp>
 
 
 int Vcpu::GetRegs(vcpu_regs *regs) {
@@ -134,16 +135,24 @@ bool Vcpu::RunOnce() {
         case KVM_EXIT_UNKNOWN:
         case KVM_EXIT_INTR:
         case KVM_EXIT_DEBUG:
-            return true;
+            return 0;
 
         case KVM_EXIT_HLT:
-            return false;
+            return 1;
 
         case KVM_EXIT_IO:
-            return true;
+            for (uint32_t i = 0; i < run->io.count; ++i) {
+                if(vm->pio_handler[run->io.port][run->io.direction](
+                        reinterpret_cast<char*>(run)+run->io.data_offset,
+                        run->io.size)) {
+                    return 1;
+                }
+            }
+            return 0;
 
         case KVM_EXIT_MMIO:
-            return true;
+            return 0;
+
         default:
         /*
          *  KVM_EXIT_EXCEPTION
@@ -171,12 +180,12 @@ bool Vcpu::RunOnce() {
          *
          *  and unexpected values
          */
-            return false;
+            return 1;
     }
 }
 
-Vcpu::Vcpu(int vcpu_fd, KVM* kvm, int cpu_id)
-    : BaseClass(vcpu_fd), kvm(kvm), cpu_id(cpu_id) {
+Vcpu::Vcpu(int vcpu_fd, KVM* kvm, VM* vm, int cpu_id)
+    : BaseClass(vcpu_fd), kvm(kvm), vm(vm), cpu_id(cpu_id) {
     std::cout << "Constructing Vcpu..." << std::endl;
 
     run = static_cast<struct kvm_run*>(mmap(NULL, kvm->mmap_size

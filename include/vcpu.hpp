@@ -96,7 +96,7 @@ struct vcpu_dregs {
 
 class Vcpu : public BaseClass {
  public:
-    explicit Vcpu(int vcpu_fd, KVM* kvm, int cpu_id);
+    explicit Vcpu(int vcpu_fd, KVM* kvm, VM* vm, int cpu_id);
     ~Vcpu();
 
     int GetRegs(vcpu_regs *regs);
@@ -108,6 +108,7 @@ class Vcpu : public BaseClass {
 
  private:
     KVM* kvm;
+    VM*  vm;
     const int cpu_id;
 
     kvm_run* run = static_cast<kvm_run*>(nullptr);

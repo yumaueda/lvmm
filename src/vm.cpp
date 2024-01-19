@@ -88,7 +88,7 @@ int VM::createVcpu() {
         }
         std::cout << "VM::" << __func__ << ": "
             << "fd=" << r << " cpu_id= " << i << std::endl;
-        new(&vcpus[i]) Vcpu(r, kvm, i);
+        new(&vcpus[i]) Vcpu(r, kvm, this, i);
         std::cout << "&VM.vcpus[" << i << "]: " << &vcpus[i] << std::endl;
     }
 
@@ -117,9 +117,9 @@ int VM::initPIOHandler() {
             default_pio_handler, default_pio_handler);
     // VGA
     registerPIOHandler(PIO_PORT_VGA_0_START, PIO_PORT_VGA_0_END,
-            do_nothing_pio_hanlder, do_nothing_pio_hanlder);
+            do_nothing_pio_handler, do_nothing_pio_handler);
     registerPIOHandler(PIO_PORT_VGA_1_START, PIO_PORT_VGA_1_END,
-            do_nothing_pio_hanlder, do_nothing_pio_hanlder);
+            do_nothing_pio_handler, do_nothing_pio_handler);
     // Reset Generator
     registerPIOHandler(PIO_PORT_RST_GEN_START, PIO_PORT_RST_GEN_END,
             default_pio_handler, reset_generator_handler_out);
