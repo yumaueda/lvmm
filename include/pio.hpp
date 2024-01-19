@@ -12,12 +12,12 @@
 #include <cstdint>
 
 
-using PIOHundler = int(*)(uint16_t, void*, uint8_t);
+using PIOHandler = int(*)(uint16_t, char*, uint8_t);
 
 constexpr int PIO_PORT_NUM = 2^16;
 
-int default_pio_hundler(uint16_t, void*, uint8_t);
-int do_nothing_pio_hunlder(uint16_t, void*, uint8_t);
+int default_pio_handler(uint16_t, char*, uint8_t);
+int do_nothing_pio_hanlder(uint16_t, char*, uint8_t);
 
 
 #endif  // INCLUDE_PIO_HPP_

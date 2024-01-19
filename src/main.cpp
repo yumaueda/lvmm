@@ -55,12 +55,6 @@ int main() {
         return -1;
     }
 
-    r = vm->createPageTable(BOOT_PAGETABLE_BASE, false);
-    if (r) {
-        std::cerr << "vm->createPageTable() failed" << std::endl;
-        return -1;
-    }
-
     r = vm->initVcpuSregs(false);
     if (r) {
         std::cerr << "vm->initVcpuSregs() failed" << std::endl;

@@ -11,5 +11,10 @@
 #include <pio.hpp>
 
 
-int default_pio_hundler(uint16_t, void*, uint8_t) { return -ENOSYS; }
-int do_nothing_pio_hunlder(uint16_t, void*, uint8_t) { return 0; }
+int default_pio_handler(uint16_t, char*, uint8_t) { return 1; }
+
+int do_nothing_pio_hanlder(uint16_t, char*, uint8_t) { return 0; }
+
+int reset_generator_handler_out(uint16_t, char*, uint8_t) {
+    return 1;
+}

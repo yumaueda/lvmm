@@ -95,6 +95,27 @@ int VM::createVcpu() {
     return 0;
 }
 
+int VM::registerPIOHandler(uint16_t port_start, uint16_t port_end,
+        PIOHandler in_func, PIOHandler out_func) {
+    for (uint16_t i = port_start; i < port_end; ++i) {
+        pio_handler[i][KVM_EXIT_IO_IN] = in_func;
+        pio_handler[i][KVM_EXIT_IO_OUT] = out_func;
+    }
+
+    std::cout << "VM::" << __func__
+        << ": port_start: " << port_start
+        << ": port_end: "   << port_end
+        << ": in_func: "    << in_func
+        << ": out_func: "   << out_func << std::endl;
+
+    return 0;
+}
+
+int VM::initPIOHandler() {
+    registerPIOHandler(0, PIO_PORT_NUM, default_pio_handler, default_pio_handler);
+    return 0;
+}
+
 int VM::initMachine() {
     int r;
     for (const InitMachineFunc e : initmachine_func) {
@@ -103,6 +124,53 @@ int VM::initMachine() {
             return r;
     }
     std::cout << "VM::" << __func__ << ": success" << std::endl;
+    return 0;
+}
+
+int VM::createPageTable(uint64_t boot_pgtable_base, bool is_64bit_boot) {
+    if (is_64bit_boot) {
+        return 0;
+    }
+
+    char*    pagetable_start = reinterpret_cast<char*>(ram_start)
+                                    + boot_pgtable_base;
+    PTE*     pml4_start      = reinterpret_cast<PTE*>(pagetable_start);
+    PTE*     pdpte_start     = reinterpret_cast<PTE*>(
+                                    pagetable_start+PAGE_SIZE_4KB);
+    PTE*     pde_start       = reinterpret_cast<PTE*>(
+                                    pagetable_start+PAGE_SIZE_4KB*2);
+    uint64_t pml4_start_gpa  = boot_pgtable_base;
+    uint64_t pdpte_start_gpa = boot_pgtable_base+PAGE_SIZE_4KB;
+    PTE      pml4e, pdpte, pde;
+
+    assert(~PL4_ADDR_MASK && reinterpret_cast<uint64_t>(pagetable_start));
+
+    // 6 pages (0x1000*6 = 0x6000 bytes) are used for the boot page table
+    // to straight map 0-4GiB memory area.
+    std::memset(pagetable_start, 0, BOOT_PAGETABLE_SIZE);
+
+    // PML4E
+    pml4e  = PAGE_FLAG_PCD | PAGE_FLAG_RW | PAGE_FLAG_P;
+    pml4e += pml4_start_gpa + PAGE_SIZE_4KB;
+    *pml4_start = pml4e;
+
+    // PDPTE
+    pdpte  = PAGE_FLAG_PCD | PAGE_FLAG_RW | PAGE_FLAG_P;
+    pdpte += pdpte_start_gpa;
+    for (int i = 0 ; i < BOOT_PDPTE_NUM; ++i) {
+        pdpte += PAGE_SIZE_4KB;
+        *(pdpte_start+i) = pdpte;
+    }
+
+    // PTE
+    pde = PAGE_FLAG_G | PAGE_FLAG_PS | PAGE_FLAG_RW | PAGE_FLAG_P;
+    for (int i = 0; i < BOOT_PDE_NUM; ++i) {
+        *(pde_start+i) = pde;
+        pde += PAGE_SIZE_2MB;
+    }
+
+    std::cout << "VM::" << __func__ << ": success" << std::endl;
+
     return 0;
 }
 
@@ -233,6 +301,11 @@ int VM::initRAM(std::string cmdline) {
     std::cout << "kernel image copied to guest RAM: "
         << static_cast<void*>(kernel_image) << std::endl;
 
+    // boot page table
+    createPageTable(BOOT_PAGETABLE_BASE, false);
+    std::cout << "boot page table created at: "
+        << BOOT_PAGETABLE_BASE << std::endl;
+
     std::cout << "VM::" << __func__ << ": success" << std::endl;
 
     return 0;
@@ -247,53 +320,6 @@ int VM::initVcpuRegs() {
     return 0;
 }
 
-int VM::createPageTable(uint64_t boot_pgtable_base, bool is_64bit_boot) {
-    if (is_64bit_boot) {
-        return 0;
-    }
-
-    char*    pagetable_start = reinterpret_cast<char*>(ram_start)
-                                    + boot_pgtable_base;
-    PTE*     pml4_start      = reinterpret_cast<PTE*>(pagetable_start);
-    PTE*     pdpte_start     = reinterpret_cast<PTE*>(
-                                    pagetable_start+PAGE_SIZE_4KB);
-    PTE*     pde_start       = reinterpret_cast<PTE*>(
-                                    pagetable_start+PAGE_SIZE_4KB*2);
-    uint64_t pml4_start_gpa  = boot_pgtable_base;
-    uint64_t pdpte_start_gpa = boot_pgtable_base+PAGE_SIZE_4KB;
-    PTE      pml4e, pdpte, pde;
-
-    assert(~PL4_ADDR_MASK && reinterpret_cast<uint64_t>(pagetable_start));
-
-    // 6 pages (0x1000*6 = 0x6000 bytes) are used for the boot page table
-    // to straight map 0-4GiB memory area.
-    std::memset(pagetable_start, 0, BOOT_PAGETABLE_SIZE);
-
-    // PML4E
-    pml4e  = PAGE_FLAG_PCD | PAGE_FLAG_RW | PAGE_FLAG_P;
-    pml4e += pml4_start_gpa + PAGE_SIZE_4KB;
-    *pml4_start = pml4e;
-
-    // PDPTE
-    pdpte  = PAGE_FLAG_PCD | PAGE_FLAG_RW | PAGE_FLAG_P;
-    pdpte += pdpte_start_gpa;
-    for (int i = 0 ; i < BOOT_PDPTE_NUM; ++i) {
-        pdpte += PAGE_SIZE_4KB;
-        *(pdpte_start+i) = pdpte;
-    }
-
-    // PTE
-    pde = PAGE_FLAG_G | PAGE_FLAG_PS | PAGE_FLAG_RW | PAGE_FLAG_P;
-    for (int i = 0; i < BOOT_PDE_NUM; ++i) {
-        *(pde_start+i) = pde;
-        pde += PAGE_SIZE_2MB;
-    }
-
-    std::cout << "VM::" << __func__ << ": success" << std::endl;
-
-    return 0;
-}
-
 int VM::initVcpuSregs(bool is_64bit_boot) {
     assert(!is_64bit_boot);
     for (int i = 0; i < vm_conf.vcpu_num; ++i) {
@@ -304,19 +330,6 @@ int VM::initVcpuSregs(bool is_64bit_boot) {
     return 0;
 }
 
-int VM::registerPIOHundler(uint16_t port_start, uint16_t port_end,
-        PIOHundler in_func, PIOHundler out_func) {
-    for (uint16_t i = port_start; i < port_end; ++i) {
-        pio_hundler[i][KVM_EXIT_IO_IN] = in_func;
-        pio_hundler[i][KVM_EXIT_IO_OUT] = out_func;
-    }
-    return 0;
-}
-
-int VM::initPIOHundler() {
-    registerPIOHundler(0, PIO_PORT_NUM, default_pio_hundler, default_pio_hundler);
-    return 0;
-}
 
 VM::VM(int vm_fd, KVM* kvm, vm_config vm_conf)\
         : BaseClass(vm_fd), kvm(kvm), vm_conf(vm_conf) {
