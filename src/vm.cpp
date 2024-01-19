@@ -25,6 +25,7 @@
 
 #include <boot.hpp>
 #include <paging.hpp>
+#include <pio.hpp>
 #include <util.hpp>
 
 
@@ -300,6 +301,15 @@ int VM::initVcpuSregs(bool is_64bit_boot) {
             return 1;
     }
     std::cout << "VM::" << __func__ << ": success" << std::endl;
+    return 0;
+}
+
+int VM::registerPIOHundler(uint16_t port_start, uint16_t port_end,
+        PIOHundler in_func, PIOHundler out_func) {
+    for (uint16_t i = port_start; i < port_end; ++i) {
+        pio_hundler[i][KVM_EXIT_IO_IN] = in_func;
+        pio_hundler[i][KVM_EXIT_IO_OUT] = out_func;
+    }
     return 0;
 }
 

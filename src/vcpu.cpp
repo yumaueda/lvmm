@@ -143,11 +143,12 @@ bool Vcpu::RunOnce() {
             // call the handler corresponding to the error here
             return true;
 
+        case KVM_EXIT_MMIO:
+            return true;
         default:
         /*
          *  KVM_EXIT_EXCEPTION
          *  KVM_EXIT_HYPERCALL
-         *  KVM_EXIT_MMIO
          *  KVM_EXIT_IRQ_WINDOW_OPEN
          *  KVM_EXIT_SHUTDOWN
          *  KVM_EXIT_FAIL_ENTRY

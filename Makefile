@@ -28,6 +28,7 @@ include = include/baseclass.hpp \
 		  include/cpufeat.hpp \
 		  include/kvm.hpp \
 		  include/paging.hpp \
+		  include/pio.hpp \
 		  include/vcpu.hpp \
 		  include/vm.hpp
 
