@@ -1,7 +1,7 @@
 AR := tar
 CXX := g++
 CPPLINT := cpplint
-CFLAGS := -Wall -Wextra -Werror --std=c++17 -I include
+CFLAGS := -Wall -Wextra -Werror --std=c++17 -I include -pthread
 CFLAGS_DEBUG := -g -DMONITOR_IOCTL
 
 

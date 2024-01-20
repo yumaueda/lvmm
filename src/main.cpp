@@ -61,5 +61,7 @@ int main() {
         return -1;
     }
 
+    r = vm->Boot();
+
     return 0;
 }

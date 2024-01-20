@@ -22,6 +22,7 @@
 #include <new>
 #include <stdexcept>
 #include <string>
+#include <thread>
 
 #include <boot.hpp>
 #include <paging.hpp>
@@ -343,6 +344,23 @@ int VM::initVcpuSregs(bool is_64bit_boot) {
     return 0;
 }
 
+int VM::Boot() {
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < vm_conf.vcpu_num; ++i) {
+        std::cout << "VM::" << __func__ << ": Booting vCPU["
+            << i << "]" << std::endl;
+        threads.emplace_back(&Vcpu::RunLoop, vcpus[i]);
+    }
+
+    for (auto& e : threads) {
+        if (e.joinable()) {
+            e.join();
+        }
+    }
+
+    return 0;
+}
 
 VM::VM(int vm_fd, KVM* kvm, vm_config vm_conf)\
         : BaseClass(vm_fd), kvm(kvm), vm_conf(vm_conf) {

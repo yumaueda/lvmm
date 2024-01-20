@@ -129,14 +129,15 @@ int Vcpu::Run() {
 }
 
 int Vcpu::RunOnce() {
-    Run();
+    if (Run())
+        return 1;
 
     switch (run->exit_reason) {
         case KVM_EXIT_UNKNOWN:
         case KVM_EXIT_INTR:
-        case KVM_EXIT_DEBUG:
             return 0;
 
+        case KVM_EXIT_DEBUG:
         case KVM_EXIT_HLT:
             return 1;
 
@@ -151,10 +152,12 @@ int Vcpu::RunOnce() {
             return 0;
 
         case KVM_EXIT_MMIO:
-            return 0;
+            return 1;  // unimplemented
 
         default:
         /*
+         *  no plan for support these below
+         *
          *  KVM_EXIT_EXCEPTION
          *  KVM_EXIT_HYPERCALL
          *  KVM_EXIT_IRQ_WINDOW_OPEN
@@ -181,6 +184,16 @@ int Vcpu::RunOnce() {
          *  and unexpected values
          */
             return 1;
+    }
+}
+
+int Vcpu::RunLoop() {
+    while (true) {
+        if(RunOnce()) {
+            std::cerr << "Vcpu::" << __func__ << ": "
+                << "can not keep vCPU running" << std::endl;
+            return 1;
+        }
     }
 }
 

@@ -105,6 +105,7 @@ class Vcpu : public BaseClass {
     int SetSregs(vcpu_sregs *sregs);
     int InitRegs(uint64_t rip, uint64_t rsi);
     int InitSregs(bool is_elfclass64);
+    int RunLoop();
 
  private:
     KVM* kvm;

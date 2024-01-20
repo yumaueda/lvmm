@@ -58,6 +58,7 @@ class VM : public BaseClass {
     int initRAM(std::string cmdline);
     int initVcpuRegs();
     int initVcpuSregs(bool is_64bit);
+    int Boot();
 
     PIOHandler pio_handler[PIO_PORT_NUM][2];
 
