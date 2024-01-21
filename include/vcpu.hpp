@@ -53,7 +53,7 @@ constexpr uint64_t MSR_IA32_EFER_LMA            = 1 << 10;
 
 
 struct vcpu_regs {
-    uint64_t rax, rbx, rcd, rdx;
+    uint64_t rax, rbx, rcx, rdx;
     uint64_t rsi, rdi, rsp, rbp;
     uint64_t r8, r9, r10, r11;
     uint64_t r12, r13, r14, r15;
@@ -112,8 +112,13 @@ class Vcpu : public BaseClass {
 
     int GetRegs(vcpu_regs *regs);
     int GetSregs(vcpu_sregs *sregs);
+
     int SetRegs(vcpu_regs *regs);
     int SetSregs(vcpu_sregs *sregs);
+
+    int DumpRegs();
+    int DumpSregs();
+
     int Run();
     int RunOnce();
 };

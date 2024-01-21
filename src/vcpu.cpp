@@ -13,6 +13,7 @@
 
 #include <cassert>
 #include <cerrno>
+#include <ios>
 #include <iostream>
 
 #include <kvm.hpp>
@@ -127,6 +128,57 @@ int Vcpu::InitSregs(bool is_64bit_boot) {
     return 0;
 }
 
+int Vcpu::DumpRegs() {
+    int r;
+    vcpu_regs regs;
+
+    if ((r = GetRegs(&regs)))
+        return r;
+
+
+    std::cout.setf(std::ios::hex, std::ios::basefield);
+
+    std::cout << "vCPU " << cpu_id << ": vcpu_regs\n";
+    // rax, rbx, rcx, rdx
+    std::cout
+        << "RAX: 0x" << regs.rax << "\n"
+        << "RBX: 0x" << regs.rbx << "\n"
+        << "RCX: 0x" << regs.rcx << "\n"
+        << "RDX: 0x" << regs.rdx << "\n"
+    // rsi, rdi, rsp, rbp
+        << "RSI: 0x" << regs.rsi << "\n"
+        << "RDI: 0x" << regs.rdi << "\n"
+        << "RSP: 0x" << regs.rsp << "\n"
+        << "RBP: 0x" << regs.rbp << "\n"
+    // r8, r9, r10, r11
+        << "R8:  0x" << regs.r8  << "\n"
+        << "R9:  0x" << regs.r9  << "\n"
+        << "R10: 0x" << regs.r10 << "\n"
+        << "R11: 0x" << regs.r11 << "\n"
+    // r12, r13, r14, r15
+        << "R12: 0x" << regs.r12 << "\n"
+        << "R13: 0x" << regs.r13 << "\n"
+        << "R14: 0x" << regs.r14 << "\n"
+        << "R15: 0x" << regs.r15 << "\n"
+    // rflags, rip
+        << "RFLAGS: 0x" << regs.rflags << "\n"
+        << "RIP: 0x"    << regs.rip << std::endl;
+
+    std::cout.setf(std::ios::dec, std::ios::basefield);
+
+    return 0;
+}
+
+int Vcpu::DumpSregs() {
+    int r;
+    vcpu_sregs sregs;
+
+    if ((r = GetSregs(&sregs)))
+        return r;
+
+    return 0;
+}
+
 int Vcpu::Run() {
     int r;
 
@@ -200,10 +252,31 @@ int Vcpu::RunOnce() {
 }
 
 int Vcpu::RunLoop() {
+    int r;
+
+    std::cout << "Vcpu::" << __func__ << ": cpu " << cpu_id
+        << " is running" << std::endl;
+
     while (true) {
         if(RunOnce()) {
-            std::cerr << "Vcpu::" << __func__ << ": "
-                << "can not keep vCPU running" << std::endl;
+            std::cerr << "Vcpu::" << __func__ << ": cpu " << cpu_id
+                << ": can not keep vCPU running" << std::endl;
+            std::cerr << "exit_reason: " << run->exit_reason << std::endl;
+
+            switch (run->exit_reason) {
+                case KVM_EXIT_FAIL_ENTRY:
+                    std::cerr << "hardware_entry_failure_reason: "
+                        << run->fail_entry.hardware_entry_failure_reason
+                        << std::endl;
+
+                // default...
+            }
+
+            if ((r = DumpRegs()))
+                return r;
+            if ((r = DumpSregs()))
+                return r;
+
             return 1;
         }
     }
