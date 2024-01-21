@@ -135,34 +135,58 @@ int Vcpu::DumpRegs() {
     if ((r = GetRegs(&regs)))
         return r;
 
-
     std::cout.setf(std::ios::hex, std::ios::basefield);
 
     std::cout << "vCPU " << cpu_id << ": vcpu_regs\n";
     // rax, rbx, rcx, rdx
     std::cout
-        << "RAX: 0x" << regs.rax << "\n"
-        << "RBX: 0x" << regs.rbx << "\n"
-        << "RCX: 0x" << regs.rcx << "\n"
-        << "RDX: 0x" << regs.rdx << "\n"
+        << "RAX: 0x"    << regs.rax << "\n"
+        << "RBX: 0x"    << regs.rbx << "\n"
+        << "RCX: 0x"    << regs.rcx << "\n"
+        << "RDX: 0x"    << regs.rdx << "\n"
     // rsi, rdi, rsp, rbp
-        << "RSI: 0x" << regs.rsi << "\n"
-        << "RDI: 0x" << regs.rdi << "\n"
-        << "RSP: 0x" << regs.rsp << "\n"
-        << "RBP: 0x" << regs.rbp << "\n"
+        << "RSI: 0x"    << regs.rsi << "\n"
+        << "RDI: 0x"    << regs.rdi << "\n"
+        << "RSP: 0x"    << regs.rsp << "\n"
+        << "RBP: 0x"    << regs.rbp << "\n"
     // r8, r9, r10, r11
-        << "R8:  0x" << regs.r8  << "\n"
-        << "R9:  0x" << regs.r9  << "\n"
-        << "R10: 0x" << regs.r10 << "\n"
-        << "R11: 0x" << regs.r11 << "\n"
+        << "R8: 0x"     << regs.r8  << "\n"
+        << "R9: 0x"     << regs.r9  << "\n"
+        << "R10: 0x"    << regs.r10 << "\n"
+        << "R11: 0x"    << regs.r11 << "\n"
     // r12, r13, r14, r15
-        << "R12: 0x" << regs.r12 << "\n"
-        << "R13: 0x" << regs.r13 << "\n"
-        << "R14: 0x" << regs.r14 << "\n"
-        << "R15: 0x" << regs.r15 << "\n"
-    // rflags, rip
-        << "RFLAGS: 0x" << regs.rflags << "\n"
-        << "RIP: 0x"    << regs.rip << std::endl;
+        << "R12: 0x"    << regs.r12 << "\n"
+        << "R13: 0x"    << regs.r13 << "\n"
+        << "R14: 0x"    << regs.r14 << "\n"
+        << "R15: 0x"    << regs.r15 << "\n"
+    // rip, rflags
+        << "RIP: 0x"    << regs.rip << "\n"
+        << "RFLAGS: 0x" << regs.rflags << "\n";
+
+    // rflags
+    std::cout << "RFLAGS.CF:   " << (regs.rflags & RF_CF   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.INIT: " << (regs.rflags & RF_INIT ? "1\n" : "0\n");
+    std::cout << "RFLAGS.PF:   " << (regs.rflags & RF_PF   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.AF:   " << (regs.rflags & RF_AF   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.ZF:   " << (regs.rflags & RF_ZF   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.SF:   " << (regs.rflags & RF_SF   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.TF:   " << (regs.rflags & RF_TF   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.IF:   " << (regs.rflags & RF_IF   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.DF:   " << (regs.rflags & RF_DF   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.OF:   " << (regs.rflags & RF_OF   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.IOPL: " << (regs.rflags & RF_IOPL ? "1\n" : "0\n");
+    std::cout << "RFLAGS.NT:   " << (regs.rflags & RF_NT   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.MD:   " << (regs.rflags & RF_MD   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.RF:   " << (regs.rflags & RF_RF   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.VM:   " << (regs.rflags & RF_VM   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.AC:   " << (regs.rflags & RF_AC   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.VIF:  " << (regs.rflags & RF_VIF  ? "1\n" : "0\n");
+    std::cout << "RFLAGS.VIP:  " << (regs.rflags & RF_VIP  ? "1\n" : "0\n");
+    std::cout << "RFLAGS.ID:   " << (regs.rflags & RF_ID   ? "1\n" : "0\n");
+    std::cout << "RFLAGS.AES:  " << (regs.rflags & RF_AES  ? "1\n" : "0\n");
+    std::cout << "RFLAGS.AI:   " << (regs.rflags & RF_AI   ? "1\n" : "0\n");
+
+    std::cout << std::flush;
 
     std::cout.setf(std::ios::dec, std::ios::basefield);
 
