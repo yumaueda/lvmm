@@ -49,13 +49,13 @@ int main() {
         return -1;
     }
 
-    r = vm->initVcpuRegs();
+    r = vm->initVcpuRegs();  // TODO: move inside initMachine
     if (r) {
         std::cerr << "vm->initVcpuRegs() failed" << std::endl;
         return -1;
     }
 
-    r = vm->initVcpuSregs(false);
+    r = vm->initVcpuSregs(false);  // TODO: move inside initMachine
     if (r) {
         std::cerr << "vm->initVcpuSregs() failed" << std::endl;
         return -1;
