@@ -350,7 +350,7 @@ int VM::Boot() {
     for (int i = 0; i < vm_conf.vcpu_num; ++i) {
         std::cout << "VM::" << __func__ << ": Booting vCPU["
             << i << "]" << std::endl;
-        threads.emplace_back(&Vcpu::RunLoop, vcpus[i]);
+        threads.emplace_back(&Vcpu::RunLoop, &vcpus[i]);
     }
 
     for (auto& e : threads) {
