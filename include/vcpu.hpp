@@ -29,7 +29,7 @@ constexpr uint64_t CR0_NW            = 1 << 29;
 constexpr uint64_t CR0_CD            = 1 << 30;
 constexpr uint64_t CR0_PG            = 1 << 31;
 constexpr uint64_t CR4_PAE           = 1 << 5;
-constexpr uint64_t RF_INIT           = 1 << 2;
+constexpr uint64_t RF_INIT           = 1 << 1;
 
 constexpr uint16_t SEG_DESC_SELECTOR_TI_GDT     = 0 << 2;
 constexpr uint16_t SEG_DESC_SELECTOR_TI_LDT     = 1 << 2;
