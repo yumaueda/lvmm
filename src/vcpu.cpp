@@ -20,30 +20,42 @@
 
 
 int Vcpu::GetRegs(vcpu_regs *regs) {
-    if (kvmIoctl(KVM_GET_REGS, regs))
+    int r;
+    if ((r = kvmIoctl(KVM_GET_REGS, regs))) {
         std::cerr << "KVM_GET_REGS for vcpu_fd "
             << fd << std::endl;
+        return r;
+    }
     return 0;
 }
 
 int Vcpu::GetSregs(vcpu_sregs *sregs) {
-    if (kvmIoctl(KVM_GET_SREGS, sregs))
+    int r;
+    if ((r = kvmIoctl(KVM_GET_SREGS, sregs))) {
         std::cerr << "KVM_GET_SREGS for vcpu_fd "
             << fd << std::endl;
+        return r;
+    }
     return 0;
 }
 
 int Vcpu::SetRegs(vcpu_regs *regs) {
-    if (kvmIoctl(KVM_SET_REGS, regs))
+    int r;
+    if ((r = kvmIoctl(KVM_SET_REGS, regs))) {
         std::cerr << "KVM_SET_REGS for vcpu_fd "
             << fd << std::endl;
+        return r;
+    }
     return 0;
 }
 
 int Vcpu::SetSregs(vcpu_sregs *sregs) {
-    if (kvmIoctl(KVM_SET_SREGS, sregs))
+    int r;
+    if ((r = kvmIoctl(KVM_SET_SREGS, sregs))) {
         std::cerr << "KVM_SET_SREGS for vcpu_fd "
             << fd << std::endl;
+        return r;
+    }
     return 0;
 }
 
