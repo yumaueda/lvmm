@@ -10,11 +10,12 @@
 
 
 #include <cstdint>
+#include <functional>
 
 
-using PIOHandler = int(*)(uint16_t, char*, uint8_t);
+using PIOHandler = std::function<int(uint16_t, char*, uint8_t)>;
 
-constexpr int      PIO_PORT_NUM             = UINT16_MAX;
+constexpr uint16_t PIO_PORT_NUM             = UINT16_MAX;
 
 // Port number for devices that do not have a dedicated include file
 constexpr uint16_t PIO_PORT_ALT_DELAY_START = 0xED;

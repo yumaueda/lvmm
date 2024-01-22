@@ -19,8 +19,8 @@ class IODev {
 
     explicit IODev(uint16_t port, uint8_t size);
 
-    virtual int read(uint16_t port, char* data_ptr, uint8_t size) = 0;
-    virtual int write(uint16_t port, char* data_ptr, uint8_t size) = 0;
+    virtual int Read(uint16_t port, char* data_ptr, uint8_t size) = 0;
+    virtual int Write(uint16_t port, char* data_ptr, uint8_t size) = 0;
 };
 
 

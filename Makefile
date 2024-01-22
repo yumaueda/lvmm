@@ -31,6 +31,7 @@ include = include/baseclass.hpp \
 		  include/paging.hpp \
 		  include/pci.hpp \
 		  include/pio.hpp \
+		  include/post.hpp \
 		  include/vcpu.hpp \
 		  include/vm.hpp
 
@@ -41,6 +42,7 @@ src = src/main.cpp \
 	  src/kvm.cpp \
 	  src/pci.cpp \
 	  src/pio.cpp \
+	  src/post.cpp \
 	  src/vm.cpp \
 	  src/vcpu.cpp
 

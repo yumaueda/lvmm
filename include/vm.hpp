@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <iostream>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -63,7 +64,7 @@ class VM : public BaseClass {
     int initVcpuSregs(bool is_64bit);
     int Boot();
 
-    std::vector<IODev*> dev;
+    std::vector<std::unique_ptr<IODev>> iodev;
     PCI pci;
     PIOHandler pio_handler[PIO_PORT_NUM][2];
 
@@ -81,6 +82,7 @@ class VM : public BaseClass {
     void* ram_start = nullptr;
     kvm_userspace_memory_region user_memory_region;  // TMP
 
+    // TODO: use std::function!
     const InitMachineFunc initmachine_func[INITMACHINE_FUNC_NUM] = {
         &VM::allocGuestRAM,
         &VM::setUserMemRegion,
@@ -92,6 +94,8 @@ class VM : public BaseClass {
             PIOHandler in_func, PIOHandler out_func);
 
     // initMachine()
+    void addIODev(IODev* iodev_ptr);
+    // init machine funcs
     int allocGuestRAM();
     int setUserMemRegion();
     int createVcpu();
@@ -99,6 +103,7 @@ class VM : public BaseClass {
 
     // initRAM()
     int createPageTable(uint64_t boot_pgtable_base, bool is_64bit_boot);
+
 };
 
 

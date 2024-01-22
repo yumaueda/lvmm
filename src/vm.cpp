@@ -28,6 +28,7 @@
 #include <paging.hpp>
 #include <pci.hpp>
 #include <pio.hpp>
+#include <post.hpp>
 #include <util.hpp>
 
 
@@ -99,7 +100,6 @@ int VM::createVcpu() {
 
 int VM::registerPIOHandler(uint16_t port_start, uint16_t port_end,
         PIOHandler in_func, PIOHandler out_func) {
-    std::cout << (sizeof(pio_handler)) << std::endl;
     for (uint16_t i = port_start; i < port_end; ++i) {
         pio_handler[i][KVM_EXIT_IO_IN] = in_func;
         pio_handler[i][KVM_EXIT_IO_OUT] = out_func;
@@ -108,8 +108,7 @@ int VM::registerPIOHandler(uint16_t port_start, uint16_t port_end,
     std::cout << "VM::" << __func__
         << ": port_start: " << port_start
         << ": port_end: "   << port_end
-        << ": in_func: "    << reinterpret_cast<void*>(in_func)
-        << ": out_func: "   << reinterpret_cast<void*>(out_func) << std::endl;
+        << std::endl;
 
     return 0;
 }
@@ -151,16 +150,42 @@ int VM::initPIOHandler() {
     // PS2 controller setting may be needed on WSL2?
     // ...
 
+    // IO Devices
+    //
+    // unique_ptr is copied, but when VM.pio_handler is out of scope,
+    // VM.iodev is also out, and vice versa.
+    for (auto& e : iodev) {
+        IODev* ptr = e.get();
+        auto read_func = [ptr](uint16_t port, char* data_ptr, uint8_t size) {
+            return ptr->Read(port, data_ptr, size);
+        };
+        auto write_func = [ptr](uint16_t port, char* data_ptr, uint8_t size) {
+            return ptr->Write(port, data_ptr, size);
+        };
+        registerPIOHandler(e->port, e->port+e->size, read_func, write_func);
+    }
+
+    // PCI Devices
+    // ...
+
     return 0;
+}
+
+void VM::addIODev(IODev* iodev_ptr) {
+    iodev.emplace_back(iodev_ptr);
 }
 
 int VM::initMachine() {
     int r;
+
+    addIODev(new Post);
+
     for (const InitMachineFunc e : initmachine_func) {
         r = (this->*e)();
         if (r < 0)
             return r;
     }
+
     std::cout << "VM::" << __func__ << ": success" << std::endl;
     return 0;
 }
