@@ -452,14 +452,16 @@ int Vcpu::RunOnce() {
 
 int Vcpu::RunLoop() {
     int r;
+    uint64_t ic = 0;  // tmp
 
     std::cout << "Vcpu::" << __func__ << ": cpu " << cpu_id
         << " is running" << std::endl;
 
     while (true) {
+        ic++;
         if (RunOnce()) {
             std::cerr << "Vcpu::" << __func__ << ": cpu " << cpu_id
-                << ": can not keep vCPU running" << std::endl;
+                << ": ic: " << ic << " can not keep vCPU running" << std::endl;
             std::cerr << "exit_reason: " << run->exit_reason << std::endl;
 
             switch (run->exit_reason) {
