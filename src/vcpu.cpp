@@ -81,11 +81,43 @@ int Vcpu::InitRegs(uint64_t rip, uint64_t rsi) {
 }
 
 int Vcpu::InitSregs(bool is_64bit_boot) {
-    assert(!is_64bit_boot);  // to be implemented
-
     int r;
     vcpu_sregs sregs;
-    segment_descriptor cs = {
+    segment_descriptor sd, others;
+
+    if ((r = GetSregs(&sregs)))
+        return r;
+
+    if (!is_64bit_boot) {
+        sregs.cs.base  = 0;
+        sregs.cs.limit = 0xffff'ffff;
+        sregs.cs.g     = 1;
+        sregs.ds.base  = 0;
+        sregs.ds.limit = 0xffff'ffff;
+        sregs.ds.g     = 1;
+        sregs.fs.base  = 0;
+        sregs.fs.limit = 0xffff'ffff;
+        sregs.fs.g     = 1;
+        sregs.gs.base  = 0;
+        sregs.gs.limit = 0xffff'ffff;
+        sregs.gs.g     = 1;
+        sregs.es.base  = 0;
+        sregs.es.limit = 0xffff'ffff;
+        sregs.es.g     = 1;
+        sregs.ss.base  = 0;
+        sregs.ss.limit = 0xffff'ffff;
+        sregs.ss.g     = 1;
+
+        sregs.cs.db = sregs.ss.db = 1;
+        sregs.cr0 |= CR0_PE;
+
+        if ((r = SetSregs(&sregs)))
+            return r;
+
+        return 0;
+    }
+
+    sd = {
         .base     = 0,
         .limit    = 0xffff'ffff,
         .selector = 1 << SEG_DESC_SELECTOR_IDX_SHIFT
@@ -103,16 +135,13 @@ int Vcpu::InitSregs(bool is_64bit_boot) {
         .avl      = 0,
     };
 
-    segment_descriptor others = cs;
+    others = sd;
     others.selector = 2 << SEG_DESC_SELECTOR_IDX_SHIFT
         | SEG_DESC_SELECTOR_TI_GDT
         | SEG_DESC_SELECTOR_RPL_KERNEL;
     others.type = SEG_DESC_TYPE_DATA
         | SEG_DESC_TYPE_DATA_A
         | SEG_DESC_TYPE_DATA_W;
-
-    if ((r = GetSregs(&sregs)))
-        return r;
 
     // reconsider order
     //
@@ -122,7 +151,7 @@ int Vcpu::InitSregs(bool is_64bit_boot) {
     sregs.cr4  = CR4_PAE;
     sregs.cr0  = CR0_PE | CR0_MP | CR0_ET | CR0_NE | CR0_WP | CR0_AM | CR0_PG;
     sregs.efer = MSR_IA32_EFER_LME | MSR_IA32_EFER_LMA;
-    sregs.cs   = cs;
+    sregs.cs   = sd;
     sregs.ds = sregs.es = sregs.fs = sregs.gs = sregs.ss = others;
 
     if ((r = SetSregs(&sregs)))
