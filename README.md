@@ -40,3 +40,11 @@ RSI->       0x0001_0000 +-----------------------------+
                         | RESERVED                    |
             0x0000_0000 +-----------------------------+
 ```
+
+## Ref
+
+- https://docs.kernel.org/virt/kvm/index.html
+- https://www.kernel.org/doc/html/latest/arch/x86/boot.html
+- Intel® 64 and IA-32 Architectures Software Developer’s Manual Combined Volumes: 1, 2A, 2B, 2C, 2D, 3A, 3B, 3C, 3D, and 4
+- https://github.com/bobuhiro11/gokvm
+- https://github.com/kvmtool/kvmtool
