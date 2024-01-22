@@ -98,6 +98,7 @@ int VM::createVcpu() {
 
 int VM::registerPIOHandler(uint16_t port_start, uint16_t port_end,
         PIOHandler in_func, PIOHandler out_func) {
+    std::cout << (sizeof(pio_handler)) << std::endl;
     for (uint16_t i = port_start; i < port_end; ++i) {
         pio_handler[i][KVM_EXIT_IO_IN] = in_func;
         pio_handler[i][KVM_EXIT_IO_OUT] = out_func;
@@ -116,17 +117,39 @@ int VM::initPIOHandler() {
     // Fill pio_handler with default_pio_handler
     registerPIOHandler(0, PIO_PORT_NUM,
             default_pio_handler, default_pio_handler);
+    // Alternate port 0xed based delay
+    registerPIOHandler(PIO_PORT_ALT_DELAY_START, PIO_PORT_ALT_DELAY_END,
+            do_nothing_pio_handler, do_nothing_pio_handler);
+    // COM2
+    registerPIOHandler(PIO_PORT_COM2_START, PIO_PORT_COM2_END,
+            do_nothing_pio_handler, do_nothing_pio_handler);
+    // COM3
+    registerPIOHandler(PIO_PORT_COM3_START, PIO_PORT_COM3_END,
+            do_nothing_pio_handler, do_nothing_pio_handler);
+    // COM4
+    registerPIOHandler(PIO_PORT_COM4_START, PIO_PORT_COM4_END,
+            do_nothing_pio_handler, do_nothing_pio_handler);
+    // Reset Generator
+    registerPIOHandler(PIO_PORT_RST_GEN_START, PIO_PORT_RST_GEN_END,
+            default_pio_handler, reset_generator_handler_out);
     // VGA
     registerPIOHandler(PIO_PORT_VGA_0_START, PIO_PORT_VGA_0_END,
             do_nothing_pio_handler, do_nothing_pio_handler);
     registerPIOHandler(PIO_PORT_VGA_1_START, PIO_PORT_VGA_1_END,
             do_nothing_pio_handler, do_nothing_pio_handler);
-    // Reset Generator
-    registerPIOHandler(PIO_PORT_RST_GEN_START, PIO_PORT_RST_GEN_END,
-            default_pio_handler, reset_generator_handler_out);
+    // unknown...?
+    registerPIOHandler(PIO_PORT_UNKNOWN_1_START, PIO_PORT_UNKNOWN_1_END,
+            do_nothing_pio_handler, do_nothing_pio_handler);
+    registerPIOHandler(PIO_PORT_UNKNOWN_2_START, PIO_PORT_UNKNOWN_2_END,
+            do_nothing_pio_handler, do_nothing_pio_handler);
 
+    // PCI configuration space access mechanism 2
+    registerPIOHandler(PIO_PORT_PCI_CSAM2_START, PIO_PORT_PCI_CSAM2_END,
+            do_nothing_pio_handler, do_nothing_pio_handler);
 
     // PS2 controller setting may be needed on WSL2?
+    // ...
+
     return 0;
 }
 
