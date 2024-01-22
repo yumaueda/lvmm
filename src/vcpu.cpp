@@ -16,6 +16,8 @@
 #include <iomanip>
 #include <ios>
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include <kvm.hpp>
 #include <pio.hpp>
@@ -196,6 +198,29 @@ int Vcpu::DumpRegs() {
     return 0;
 }
 
+void Vcpu::DumpSegmentDescriptor(segment_descriptor& sd) {
+    std::cout.setf(std::ios::hex, std::ios::basefield);
+
+    std::cout << std::setfill('0')
+        << "base:     0x" << std::setw(16) << sd.base     << "\n"
+        << "limit:    0x" << std::setw(8)  << sd.limit    << "\n"
+        << "selector: 0x" << std::setw(4)  << sd.selector << "\n"
+        << "type:     0x" << std::setw(2)  << sd.type     << "\n";
+
+    std::cout
+        << "present:  " << (sd.present ? "1 " : "0 ")
+        << "dpl:      " << (sd.dpl     ? "1 " : "0 ")
+        << "db:       " << (sd.db      ? "1 " : "0 ")
+        << "s:        " << (sd.s       ? "1\n" : "0\n")
+        << "l:        " << (sd.l       ? "1 " : "0 ")
+        << "g:        " << (sd.g       ? "1 " : "0 ")
+        << "avl:      " << (sd.avl     ? "1\n" : "0\n");
+
+    std::cout << std::flush;
+
+    std::cout.setf(std::ios::dec, std::ios::basefield);
+}
+
 int Vcpu::DumpSregs() {
     int r;
     vcpu_sregs sregs;
@@ -206,6 +231,25 @@ int Vcpu::DumpSregs() {
     std::cout.setf(std::ios::hex, std::ios::basefield);
 
     std::cout << "vCPU " << cpu_id << ": vcpu_sregs\n";
+
+    // cs, ds, es, fs, gs, ss, tr, ldt
+    std::vector<std::pair<std::string, SegmentDescriptorPointer>> sdmap = {
+        {"CS",  &vcpu_sregs::cs},
+        {"DS",  &vcpu_sregs::ds},
+        {"ES",  &vcpu_sregs::es},
+        {"FS",  &vcpu_sregs::fs},
+        {"GS",  &vcpu_sregs::gs},
+        {"SS",  &vcpu_sregs::ss},
+        {"TR",  &vcpu_sregs::tr},
+        {"LDR", &vcpu_sregs::ldt},
+    };
+
+    for (auto& pair : sdmap) {
+        std::cout << pair.first << std::endl;
+        DumpSegmentDescriptor(sregs.*pair.second);
+    }
+
+    // gdt, idt
 
     // cr0, cr2, cr3, cr4, cr8
     std::cout << "CR0: 0x" << std::setfill('0') << std::setw(16)
@@ -223,16 +267,16 @@ int Vcpu::DumpSregs() {
         << "CD: " << (sregs.cr0 & CR0_CD ? "1 " : "0 ")
         << "PG: " << (sregs.cr0 & CR0_PG ? "1\n" : "0\n");
 
-    std::cout << "CR2: 0x" << std::setfill('0') << std::setw(16)
-        << sregs.cr2 << "\n";
-
-    std::cout << "CR3: 0x" << std::setfill('0') << std::setw(16)
-        << sregs.cr3 << "\n";
-    std::cout << "PWT: "   << (sregs.cr3 & CR3_PWT  ? "1 " : "0 ")
-        << "PCD: "   << (sregs.cr3 & CR3_PCD  ? "1 " : "0 ")
+    std::cout << std::setfill('0')
+        << "CR2: 0x" << std::setw(16) << sregs.cr2 << "\n"
+        << "CR3: 0x" << std::setw(16) << sregs.cr3 << "\n";
+    std::cout
+        << "PWT: "    << (sregs.cr3 & CR3_PWT  ? "1 " : "0 ")
+        << "PCD: "    << (sregs.cr3 & CR3_PCD  ? "1 " : "0 ")
         << "PDBR: 0x" << (sregs.cr3 & CR3_PDBR_MASK) << "\n";
 
-    std::cout << "CR4: 0x" << sregs.cr4 << "\n";
+    std::cout << "CR4: 0x" << std::setfill('0') << std::setw(16)
+        << sregs.cr4 << "\n";
     std::cout
         << "CR4.VME:        " << (sregs.cr4 & CR4_VME ? "1 " : "0 ")
         << "CR4.PVI:        " << (sregs.cr4 & CR4_PVI ? "1 " : "0 ")
@@ -257,7 +301,27 @@ int Vcpu::DumpSregs() {
         << "CR4.CET:        " << (sregs.cr4 & CR4_CET ? "1 " : "0 ")
         << "CR4.PKS:        " << (sregs.cr4 & CR4_PKS ? "1\n" : "0\n");
 
-    std::cout << "CR8: 0x" << sregs.cr8 << "\n";
+    std::cout << "CR8: 0x" << std::setfill('0') << std::setw(16)
+        << sregs.cr8 << "\n";
+
+    // efer
+    std::cout << "EFER: 0x" << std::setfill('0') << std::setw(16)
+        << sregs.efer << "\n";
+    std::cout
+        << "EFER.SCE:   " << (sregs.efer & MSR_IA32_EFER_SCE ? "1 " : "0 ")
+        << "EFER.LME:   " << (sregs.efer & MSR_IA32_EFER_LME ? "1 " : "0 ")
+        << "EFER.LMA:   " << (sregs.efer & MSR_IA32_EFER_LMA ? "1 " : "0 ")
+        << "EFER.NXE:   " << (sregs.efer & MSR_IA32_EFER_NXE ? "1\n" : "0\n")
+        << "EFER.SVME:  " << (sregs.efer & MSR_IA32_EFER_SVME ? "1 " : "0 ")
+        << "EFER.LMSLE: " << (sregs.efer & MSR_IA32_EFER_LMSLE ? "1 " : "0 ")
+        << "EFER.FFXSR: " << (sregs.efer & MSR_IA32_EFER_FFXSR ? "1 " : "0 ")
+        << "EFER.TCE:   " << (sregs.efer & MSR_IA32_EFER_TCE ? "1\n" : "0\n");
+
+    // apic_base
+    std::cout << "APIC_BASE: 0x" << std::setfill('0') << std::setw(16)
+        << sregs.apic_base << "\n";
+
+    // TODO: interrupt_bitmap
 
     std::cout << std::flush;
 

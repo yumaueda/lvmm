@@ -78,6 +78,15 @@ constexpr uint64_t RF_ID   = 1 << 21;
 constexpr uint64_t RF_AES  = 1 << 30;
 constexpr uint64_t RF_AI   = 1 << 31;
 
+constexpr uint64_t MSR_IA32_EFER_SCE   = 1;
+constexpr uint64_t MSR_IA32_EFER_LME   = 1 << 8;
+constexpr uint64_t MSR_IA32_EFER_LMA   = 1 << 10;
+constexpr uint64_t MSR_IA32_EFER_NXE   = 1 << 11;
+constexpr uint64_t MSR_IA32_EFER_SVME  = 1 << 12;
+constexpr uint64_t MSR_IA32_EFER_LMSLE = 1 << 13;
+constexpr uint64_t MSR_IA32_EFER_FFXSR = 1 << 14;
+constexpr uint64_t MSR_IA32_EFER_TCE   = 1 << 15;
+
 constexpr uint16_t SEG_DESC_SELECTOR_TI_GDT     = 0 << 2;
 constexpr uint16_t SEG_DESC_SELECTOR_TI_LDT     = 1 << 2;
 constexpr uint8_t  SEG_DESC_SELECTOR_IDX_SHIFT  = 3;
@@ -95,8 +104,6 @@ constexpr uint8_t  SEG_DESC_DPL_KERNEL          = 0;
 constexpr uint8_t  SEG_DESC_DB_EX_LSET          = 0;
 constexpr uint8_t  SEG_DESC_L_64BIT_MODE        = 1;
 constexpr uint8_t  SEG_DESC_GRAN_4KB            = 1;
-constexpr uint64_t MSR_IA32_EFER_LME            = 1 << 8;
-constexpr uint64_t MSR_IA32_EFER_LMA            = 1 << 10;
 
 
 struct vcpu_regs {
@@ -133,6 +140,8 @@ struct vcpu_sregs {
     uint64_t interrupt_bitmap[(KVM_NR_INTERRUPTS+63)/64];
 };
 
+typedef segment_descriptor vcpu_sregs::*SegmentDescriptorPointer;
+
 struct vcpu_dregs {
     uint64_t db[4];
     uint64_t dr6;
@@ -163,6 +172,7 @@ class Vcpu : public BaseClass {
     int SetRegs(vcpu_regs *regs);
     int SetSregs(vcpu_sregs *sregs);
 
+    void DumpSegmentDescriptor(segment_descriptor& sd);
     int DumpRegs();
     int DumpSregs();
 
