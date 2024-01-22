@@ -73,13 +73,13 @@ lmigtester_debug: $(src) $(include)
 lmigtester: $(src) $(include)
 	$(CXX) $(CFLAGS) $(src) -o $@
 
-lint: $(src) $(include)
-	$(CPPLINT) $^
-
 .PHONY: clean tag lint
 
 clean:
 	rm -f lmigtester lmigtester_debug initramfs unittest unittest_debug peda-session-* .gdb_history tags
 
 tag:
-	ctags -R .
+	rm tags && ctags -R .
+
+lint: $(src) $(include)
+	$(CPPLINT) $^
