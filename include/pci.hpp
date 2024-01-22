@@ -41,7 +41,7 @@ class PCIDevice {
 class PCI {
  public:
     uint32_t addr;
-    std::vector<PCIDevice> device;
+    std::vector<PCIDevice*> device;
 
     bool     is_addr_enable();
     // should be inline?

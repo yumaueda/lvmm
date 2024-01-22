@@ -15,9 +15,11 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
 
 #include <baseclass.hpp>
 #include <boot.hpp>
+#include <iodev.hpp>
 #include <kvm.hpp>
 #include <pci.hpp>
 #include <pio.hpp>
@@ -61,6 +63,7 @@ class VM : public BaseClass {
     int initVcpuSregs(bool is_64bit);
     int Boot();
 
+    std::vector<IODev*> dev;
     PCI pci;
     PIOHandler pio_handler[PIO_PORT_NUM][2];
 
