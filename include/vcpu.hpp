@@ -141,6 +141,7 @@ struct vcpu_sregs {
 };
 
 typedef segment_descriptor vcpu_sregs::*SegmentDescriptorPointer;
+typedef descriptor_table   vcpu_sregs::*DescriptorTablePointer;
 
 struct vcpu_dregs {
     uint64_t db[4];
@@ -173,6 +174,7 @@ class Vcpu : public BaseClass {
     int SetSregs(vcpu_sregs *sregs);
 
     void DumpSegmentDescriptor(segment_descriptor& sd);
+    void DumpDescriptorTable(descriptor_table& dt);
     int DumpRegs();
     int DumpSregs();
 

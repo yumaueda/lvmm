@@ -221,6 +221,16 @@ void Vcpu::DumpSegmentDescriptor(segment_descriptor& sd) {
     std::cout.setf(std::ios::dec, std::ios::basefield);
 }
 
+void Vcpu::DumpDescriptorTable(descriptor_table& dt) {
+    std::cout.setf(std::ios::hex, std::ios::basefield);
+
+    std::cout << std::setfill('0')
+        << "base:  0x" << std::setw(16) << dt.base  << "\n"
+        << "limit: 0x" << std::setw(4)  << dt.limit << std::endl;
+
+    std::cout.setf(std::ios::dec, std::ios::basefield);
+}
+
 int Vcpu::DumpSregs() {
     int r;
     vcpu_sregs sregs;
@@ -250,6 +260,15 @@ int Vcpu::DumpSregs() {
     }
 
     // gdt, idt
+    std::vector<std::pair<std::string, DescriptorTablePointer>> dtmap = {
+        {"GDT", &vcpu_sregs::gdt},
+        {"IDT", &vcpu_sregs::idt},
+    };
+
+    for (auto& pair : dtmap) {
+        std::cout << pair.first << std::endl;
+        DumpDescriptorTable(sregs.*pair.second);
+    }
 
     // cr0, cr2, cr3, cr4, cr8
     std::cout << "CR0: 0x" << std::setfill('0') << std::setw(16)
