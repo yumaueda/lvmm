@@ -26,14 +26,15 @@ constexpr uint32_t PCI_ADDR_ENABLE_BIT      = 31;
 constexpr uint32_t PCI_BAR_MMIO             = 0;
 constexpr uint32_t PCI_BAR_PIO              = 1;
 
-struct pci_device {
+class PCIDevice {
     virtual int read(uint16_t port, char* data_ptr, uint8_t size)  = 0;
     virtual int write(uint16_t port, char* data_ptr, uint8_t size) = 0;
 };
 
-struct pci {
+class PCI {
+ public:
     uint32_t addr;
-    std::vector<pci_device> device;
+    std::vector<PCIDevice> device;
 
     bool     is_addr_enable();
     // should be inline?

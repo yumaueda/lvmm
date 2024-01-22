@@ -10,27 +10,27 @@
 #include <cstdint>
 
 
-bool pci::is_addr_enable() {
+bool PCI::is_addr_enable() {
     return ((addr >> PCI_ADDR_ENABLE_BIT) & 1) == 1;
 }
 
-uint32_t pci::get_offset() {
+uint32_t PCI::get_offset() {
     return addr & PCI_ADDR_OFFSET_MASK;
 }
 
-uint32_t pci::get_func() {
+uint32_t PCI::get_func() {
     return (addr & PCI_ADDR_FUNC_MASK) >> PCI_ADDR_FUNC_BIT;
 }
 
-uint32_t pci::get_dev() {
+uint32_t PCI::get_dev() {
     return (addr & PCI_ADDR_DEV_MASK) >> PCI_ADDR_DEV_BIT;
 }
 
-uint32_t pci::get_bus() {
+uint32_t PCI::get_bus() {
     return (addr & PCI_ADDR_BUS_MASK) >> PCI_ADDR_BUS_BIT;
 }
 
-int pci::config_addr_in(uint16_t, char* data_ptr, uint8_t size) {
+int PCI::config_addr_in(uint16_t, char* data_ptr, uint8_t size) {
     uint32_t* addr_ptr = reinterpret_cast<uint32_t*>(data_ptr);
     if (size != PCI_ADDR_SIZE)
         return 1;
@@ -38,7 +38,7 @@ int pci::config_addr_in(uint16_t, char* data_ptr, uint8_t size) {
     return 0;
 }
 
-int pci::config_addr_out(uint16_t, char* data_ptr, uint8_t size) {
+int PCI::config_addr_out(uint16_t, char* data_ptr, uint8_t size) {
     uint32_t* addr_ptr = reinterpret_cast<uint32_t*>(data_ptr);
     if (size != PCI_ADDR_SIZE)
         return 1;
@@ -47,7 +47,7 @@ int pci::config_addr_out(uint16_t, char* data_ptr, uint8_t size) {
 }
 
 /*
-int pci::config_data_in(uint16_t port, char* data_ptr, uint8_t size) {
+int PCI::config_data_in(uint16_t port, char* data_ptr, uint8_t size) {
     uint32_t offset = get_offset();
     uint32_t func   = get_func();
     uint32_t dev    = get_dev();
@@ -64,7 +64,7 @@ int pci::config_data_in(uint16_t port, char* data_ptr, uint8_t size) {
     return 0;
 }
 
-int pci::config_data_out(uint16_t, char* data_ptr, uint8_t size) {
+int PCI::config_data_out(uint16_t, char* data_ptr, uint8_t size) {
     uint32_t offset = get_offset();
     uint32_t func   = get_func();
     uint32_t dev    = get_dev();

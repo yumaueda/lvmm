@@ -19,6 +19,7 @@
 #include <baseclass.hpp>
 #include <boot.hpp>
 #include <kvm.hpp>
+#include <pci.hpp>
 #include <pio.hpp>
 #include <vcpu.hpp>
 
@@ -60,6 +61,7 @@ class VM : public BaseClass {
     int initVcpuSregs(bool is_64bit);
     int Boot();
 
+    PCI pci;
     PIOHandler pio_handler[PIO_PORT_NUM][2];
 
  private:
