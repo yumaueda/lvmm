@@ -406,7 +406,7 @@ int Vcpu::RunOnce() {
 
         case KVM_EXIT_IO:
             for (uint32_t i = 0; i < run->io.count; ++i) {
-                if (vm->pio_handler[run->io.port][run->io.direction](
+                if (vm->pio_handler[run->io.port][run->io.direction](run->io.port,
                         reinterpret_cast<char*>(run)+run->io.data_offset,
                         run->io.size)) {
                     return 1;

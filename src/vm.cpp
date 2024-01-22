@@ -26,6 +26,7 @@
 
 #include <boot.hpp>
 #include <paging.hpp>
+#include <pci.hpp>
 #include <pio.hpp>
 #include <util.hpp>
 

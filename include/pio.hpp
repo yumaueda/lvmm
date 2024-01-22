@@ -12,10 +12,11 @@
 #include <cstdint>
 
 
-using PIOHandler = int(*)(char*, uint8_t);
+using PIOHandler = int(*)(uint16_t, char*, uint8_t);
 
 constexpr int      PIO_PORT_NUM             = UINT16_MAX;
 
+// Port number for devices that do not have a dedicated include file
 constexpr uint16_t PIO_PORT_ALT_DELAY_START = 0xED;
 constexpr uint16_t PIO_PORT_ALT_DELAY_END   = 0xEE;
 constexpr uint16_t PIO_PORT_COM2_START      = 0x2F8;
@@ -34,12 +35,11 @@ constexpr uint16_t PIO_PORT_UNKNOWN_1_START = 0xCFE;  // ?
 constexpr uint16_t PIO_PORT_UNKNOWN_1_END   = 0xCFF;  // ?
 constexpr uint16_t PIO_PORT_UNKNOWN_2_START = 0xCFA;  // ?
 constexpr uint16_t PIO_PORT_UNKNOWN_2_END   = 0xCFC;  // ?
-constexpr uint16_t PIO_PORT_PCI_CSAM2_START = 0xC000;
-constexpr uint16_t PIO_PORT_PCI_CSAM2_END   = 0xD000;
 
-int default_pio_handler(char*, uint8_t);
-int do_nothing_pio_handler(char*, uint8_t);
-int reset_generator_handler_out(char* data_ptr, uint8_t);
+
+int default_pio_handler(uint16_t, char*, uint8_t);
+int do_nothing_pio_handler(uint16_t, char*, uint8_t);
+int reset_generator_handler_out(uint16_t, char* data_ptr, uint8_t);
 
 
 #endif  // INCLUDE_PIO_HPP_
