@@ -285,7 +285,7 @@ int VM::initRAM(std::string cmdline) {
     bp.add_e820_entry(EBDA_START,
             VGARAM_START-EBDA_START, BOOT_E820_TYPE_RESERVED);
     bp.add_e820_entry(MBBIOS_START, MBBIOS_SIZE, BOOT_E820_TYPE_RESERVED);
-    bp.add_e820_entry(HIGHMEM_BASE, vm_conf.ram_size, BOOT_E820_TYPE_RAM);
+    bp.add_e820_entry(HIGHMEM_BASE, vm_conf.ram_size-HIGHMEM_BASE, BOOT_E820_TYPE_RAM);
 
     // change later to print these writing processs
     // some kind of setter?
