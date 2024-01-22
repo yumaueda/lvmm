@@ -36,7 +36,7 @@ constexpr uint64_t MBBIOS_START        = 0x000f'0000;
 constexpr uint64_t HIGHMEM_BASE        = 0x0010'0000;
 constexpr uint64_t INITRAMFS_ADDR      = 0x0f00'0000;
 constexpr uint64_t APIC_BASE           = 0xfee0'0000;
-constexpr uint32_t MBBIOS_SIZE         = 0x000f'ffff;
+constexpr uint32_t MBBIOS_SIZE         = 0x0000'ffff;
 
 constexpr int      EBDA_PADDING_SIZE   = 16*3;
 
