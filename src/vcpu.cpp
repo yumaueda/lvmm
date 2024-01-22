@@ -406,7 +406,7 @@ int Vcpu::RunOnce() {
 
         case KVM_EXIT_IO:
             for (uint32_t i = 0; i < run->io.count; ++i) {
-                if(vm->pio_handler[run->io.port][run->io.direction](
+                if (vm->pio_handler[run->io.port][run->io.direction](
                         reinterpret_cast<char*>(run)+run->io.data_offset,
                         run->io.size)) {
                     return 1;
@@ -457,7 +457,7 @@ int Vcpu::RunLoop() {
         << " is running" << std::endl;
 
     while (true) {
-        if(RunOnce()) {
+        if (RunOnce()) {
             std::cerr << "Vcpu::" << __func__ << ": cpu " << cpu_id
                 << ": can not keep vCPU running" << std::endl;
             std::cerr << "exit_reason: " << run->exit_reason << std::endl;
