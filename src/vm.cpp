@@ -18,6 +18,7 @@
 #include <cstring>
 #include <cerrno>
 #include <exception>
+#include <ios>
 #include <iostream>
 #include <new>
 #include <stdexcept>
@@ -247,6 +248,7 @@ int VM::initRAM(std::string cmdline) {
     char* kernel_image  = reinterpret_cast<char*>(ram_start)
                                 + HIGHMEM_BASE;
     std::streamsize ramdisk_size, kernel_size;
+    std::ios::pos_type kernel_load_offset;
 
     char* cmdline_start = reinterpret_cast<char*>(ram_start)
                                 + COMMANDLINE_ADDR;
@@ -357,13 +359,16 @@ int VM::initRAM(std::string cmdline) {
 
     // kernel
     assert(!vm_conf.is_64bit_boot);  // to be implemented
-    kernel_size = (bp.header.setup_sects+1) * SECT_SIZE;
+    kernel_load_offset = (bp.header.setup_sects+1) * SECT_SIZE;
+    kernel.seekg(kernel_load_offset, std::ios::beg);
+    kernel_size = get_ifs_size(kernel) - kernel_load_offset;
     if (!kernel.read(kernel_image, kernel_size)) {
         std::cerr << "couldn't load kernel image" << std::endl;
         return 1;
     }
     std::cout << "kernel image copied to guest RAM: "
         << static_cast<void*>(kernel_image) << std::endl;
+    kernel.seekg(0, std::ios::beg);
 
     // boot page table
     createPageTable(BOOT_PAGETABLE_BASE, false);
