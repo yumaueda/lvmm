@@ -26,6 +26,7 @@
 #include <thread>
 
 #include <boot.hpp>
+#include <cmos.hpp>
 #include <paging.hpp>
 #include <pci.hpp>
 #include <pio.hpp>
@@ -180,6 +181,7 @@ int VM::initMachine() {
     int r;
 
     addIODev(new Post);
+    addIODev(new CMOS);
 
     for (const InitMachineFunc e : initmachine_func) {
         r = (this->*e)();
