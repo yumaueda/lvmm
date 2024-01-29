@@ -34,10 +34,25 @@
 #include <util.hpp>
 
 
+int VM::setTSSAddr() {
+    int r;
+
+    r = kvmIoctl(KVM_SET_TSS_ADDR, TSS_BASE);
+
+    if (r < 0) {
+        perror(("VM::" + std::string(__func__) + ": kvmIoctl").c_str());
+        return -errno;
+    }
+
+    std::cout << "VM::" << __func__ << ": registered" << std::endl;
+
+    return r;
+}
+
 int VM::allocGuestRAM() {
     // not caring about hugetlbpage
     ram_start = mmap(NULL, vm_conf.ram_size, (PROT_READ|PROT_WRITE),
-                        (MAP_PRIVATE|MAP_ANONYMOUS|MAP_NORESERVE), -1, 0);
+                        (MAP_SHARED|MAP_ANONYMOUS|MAP_NORESERVE), -1, 0);
 
     if (ram_start == MAP_FAILED) {
         perror(("VM::" + std::string(__func__) + ": mmap").c_str());
@@ -72,8 +87,10 @@ int VM::setUserMemRegion() {
 
     r = kvmIoctl(KVM_SET_USER_MEMORY_REGION, &user_memory_region);
 
-    if (r < 0)
+    if (r < 0) {
         perror(("VM::" + std::string(__func__) + ": kmvIoctl").c_str());
+        return -errno;
+    }
     std::cout << "VM::" << __func__ << ": registered" << std::endl;
 
     return r;
@@ -150,7 +167,9 @@ int VM::initPIOHandler() {
             do_nothing_pio_handler, do_nothing_pio_handler);
 
     // PS2 controller setting may be needed on WSL2?
-    // ...
+    // TMP! FOR DEBUG PURPOSE
+    registerPIOHandler(0x60, 0x70,
+            do_nothing_pio_handler, do_nothing_pio_handler);
 
     // IO Devices
     //
