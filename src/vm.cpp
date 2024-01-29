@@ -154,23 +154,26 @@ int VM::initPIOHandler() {
     // Alternate port 0xed based delay
     registerPIOHandler(PIO_PORT_ALT_DELAY_START, PIO_PORT_ALT_DELAY_END,
             do_nothing_pio_handler, do_nothing_pio_handler);
-    // COM2
-    registerPIOHandler(PIO_PORT_COM2_START, PIO_PORT_COM2_END,
-            do_nothing_pio_handler, do_nothing_pio_handler);
-    // COM3
-    registerPIOHandler(PIO_PORT_COM3_START, PIO_PORT_COM3_END,
-            do_nothing_pio_handler, do_nothing_pio_handler);
     // COM4
     registerPIOHandler(PIO_PORT_COM4_START, PIO_PORT_COM4_END,
             do_nothing_pio_handler, do_nothing_pio_handler);
-    // Reset Generator
-    registerPIOHandler(PIO_PORT_RST_GEN_START, PIO_PORT_RST_GEN_END,
-            default_pio_handler, reset_generator_handler_out);
+    // COM2
+    registerPIOHandler(PIO_PORT_COM2_START, PIO_PORT_COM2_END,
+            do_nothing_pio_handler, do_nothing_pio_handler);
     // VGA
     registerPIOHandler(PIO_PORT_VGA_0_START, PIO_PORT_VGA_0_END,
             do_nothing_pio_handler, do_nothing_pio_handler);
     registerPIOHandler(PIO_PORT_VGA_1_START, PIO_PORT_VGA_1_END,
             do_nothing_pio_handler, do_nothing_pio_handler);
+    // COM3
+    registerPIOHandler(PIO_PORT_COM3_START, PIO_PORT_COM3_END,
+            do_nothing_pio_handler, do_nothing_pio_handler);
+    // COM1 (tmp) FIXME: handler needed!!!
+    registerPIOHandler(PIO_PORT_COM1_START, PIO_PORT_COM1_END,
+            do_nothing_pio_handler, do_nothing_pio_handler);
+    // Reset Generator
+    registerPIOHandler(PIO_PORT_RST_GEN_START, PIO_PORT_RST_GEN_END,
+            default_pio_handler, reset_generator_handler_out);
     // unknown...?
     registerPIOHandler(PIO_PORT_UNKNOWN_1_START, PIO_PORT_UNKNOWN_1_END,
             do_nothing_pio_handler, do_nothing_pio_handler);
