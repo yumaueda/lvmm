@@ -230,11 +230,7 @@ int VM::initMachine() {
     return 0;
 }
 
-int VM::createPageTable(uint64_t boot_pgtable_base, bool is_64bit_boot) {
-    if (is_64bit_boot) {
-        return 0;
-    }
-
+int VM::createPageTable(uint64_t boot_pgtable_base) {
     char*    pagetable_start = reinterpret_cast<char*>(ram_start)
                                     + boot_pgtable_base;
     PTE*     pml4_start      = reinterpret_cast<PTE*>(pagetable_start);
@@ -407,12 +403,16 @@ int VM::initRAM(std::string cmdline) {
     }
     std::cout << "kernel image copied to guest RAM: "
         << static_cast<void*>(kernel_image) << std::endl;
+    std::cout << "kernel load offset (setupsz): "
+        << kernel_load_offset << std::endl;
     kernel.seekg(0, std::ios::beg);
 
     // boot page table
-    createPageTable(BOOT_PAGETABLE_BASE, false);
-    std::cout << "boot page table created at: "
-        << BOOT_PAGETABLE_BASE << std::endl;
+    if (vm_conf.is_64bit_boot) {
+        createPageTable(BOOT_PAGETABLE_BASE);
+        std::cout << "boot page table created at: "
+            << BOOT_PAGETABLE_BASE << std::endl;
+    }
 
     std::cout << "VM::" << __func__ << ": success" << std::endl;
 

@@ -106,7 +106,7 @@ class VM : public BaseClass {
     int initPIOHandler();
 
     // initRAM()
-    int createPageTable(uint64_t boot_pgtable_base, bool is_64bit_boot);
+    int createPageTable(uint64_t boot_pgtable_base);
 
 };
 
