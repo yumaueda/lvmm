@@ -32,7 +32,7 @@ class VM;
 class KVM;
 
 
-constexpr const int INITMACHINE_FUNC_NUM = 5;
+constexpr const int INITMACHINE_FUNC_NUM = 6;
 
 
 struct vm_config {
@@ -85,6 +85,7 @@ class VM : public BaseClass {
     // TODO: use std::function!
     const InitMachineFunc initmachine_func[INITMACHINE_FUNC_NUM] = {
         &VM::setTSSAddr,
+        &VM::setIdentityMapAddr,
         &VM::allocGuestRAM,
         &VM::setUserMemRegion,
         &VM::createVcpu,
@@ -98,6 +99,7 @@ class VM : public BaseClass {
     void addIODev(IODev* iodev_ptr);
     // init machine funcs
     int setTSSAddr();
+    int setIdentityMapAddr();
     int allocGuestRAM();
     int setUserMemRegion();
     int createVcpu();

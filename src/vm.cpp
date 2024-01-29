@@ -49,6 +49,21 @@ int VM::setTSSAddr() {
     return r;
 }
 
+int VM::setIdentityMapAddr() {
+    int r;
+
+    r = kvmIoctl(KVM_SET_IDENTITY_MAP_ADDR, IDENTITY_MAP_BASE);
+
+    if (r < 0) {
+        perror(("VM::" + std::string(__func__) + ": kvmIoctl").c_str());
+        return -errno;
+    }
+
+    std::cout << "VM::" << __func__ << ": registered" << std::endl;
+
+    return r;
+}
+
 int VM::allocGuestRAM() {
     // not caring about hugetlbpage
     ram_start = mmap(NULL, vm_conf.ram_size, (PROT_READ|PROT_WRITE),
