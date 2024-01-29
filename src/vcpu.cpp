@@ -467,10 +467,22 @@ int Vcpu::RunLoop() {
             std::cerr << "exit_reason: " << run->exit_reason << std::endl;
 
             switch (run->exit_reason) {
+                case KVM_EXIT_MMIO:
+                    std::cerr << std::hex << "run->mmio:\n"
+                        << "	phys_addr: 0x" << run->mmio.phys_addr << '\n'
+                        << "	len: " << run->mmio.len << '\n'
+                        << "	data: ";
+                    for (int i = 0; i < 8; ++i)
+                        std::cerr << std::hex << +run->mmio.data[i];
+                    std::cerr << '\n'
+                        << "	is_write: " << +run->mmio.is_write << std::endl;
+                    break;
+
                 case KVM_EXIT_FAIL_ENTRY:
                     std::cerr << "hardware_entry_failure_reason: "
                         << run->fail_entry.hardware_entry_failure_reason
                         << std::endl;
+                    break;
 
                 // default...
             }
