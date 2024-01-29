@@ -19,7 +19,7 @@ int main() {
     KVM* kvm;
     VM*  vm;
     vm_config vm_conf {
-        .vcpu_num = 2,
+        .vcpu_num = 1,
         .ram_size = static_cast<uint64_t>(1) << 30,
         .kernel_path = "bzImage",
         .initramfs_path = "initramfs",
@@ -43,7 +43,7 @@ int main() {
         return -1;
     }
 
-    r = vm->initRAM("dummy");
+    r = vm->initRAM("console=ttyS0 earlyprintk=serial noapic noacpi notsc nowatchdog nmi_watchdog=0 debug apic=debug show_lapic=all mitigations=off lapic tsc_early_khz=2000 dyndbg=\"file arch/x86/kernel/smpboot.c +plf ; file drivers/net/virtio_net.c +plf\" pci=realloc=off virtio_pci.force_legacy=1 rdinit=/init init=/init");
     if (r) {
         std::cerr << "vm->initRAM() failed" << std::endl;
         return -1;
