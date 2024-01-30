@@ -74,7 +74,7 @@ class VM : public BaseClass {
     std::ifstream kernel, initramfs;
 
     static constexpr const kvm_pit_config pit_config = {
-        .flags = KVM_PIT_SPEAKER_DUMMY,
+        .flags = {0},
         .pad = {0},
     };
 

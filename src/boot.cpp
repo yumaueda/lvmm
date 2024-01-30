@@ -27,7 +27,7 @@ uint8_t mp_calc_checksum<mpfps*>(mpfps* mpptr) {
 template <>
 uint8_t mp_calc_checksum<mpctable*>(mpctable* mpptr) {
     uint8_t* byteptr_ctable = reinterpret_cast<uint8_t*>(mpptr);
-    return _mp_calc_checksum_inline(byteptr_ctable, MPCTABLE_LENGTH);
+    return _mp_calc_checksum_inline(byteptr_ctable, sizeof(mpctable));
 }
 
 int setup_header::is_valid() {
@@ -62,11 +62,14 @@ static
 void processor_entry_init(mpctable_processor_entry* entry_array,
                             const int vcpu_num) {
     for (int i = 0; i < vcpu_num; ++i) {
+        entry_array[i].entry_type = MPCTE_ENTRY_TYPE_PROC;
         entry_array[i].local_apic_id = i;
+        entry_array[i].local_apic_ver = MPCTE_PROC_APIC_VER;
         entry_array[i].cpu_flags |= MPCTE_PROC_CPUFLAGS_EN;
-        entry_array[i].cpu_flags |= i == 0 ?
-            MPCTE_PROC_CPUFLAGS_BP : 0;
+        entry_array[i].cpu_flags |= i == 0 ? MPCTE_PROC_CPUFLAGS_BP : 0;
         entry_array[i].cpu_sig = MPCTE_PROC_CPUSIGNATURE;
+        entry_array[i].feat_flags = MPCTE_PROC_FEATFLAGS_FPU
+                                  | MPCTE_PROC_FEATFLAGS_APIC;
     }
 }
 

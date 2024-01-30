@@ -53,9 +53,6 @@ constexpr uint8_t  MPFPS_LENGTH              = 1;
 constexpr uint8_t  MPFPS_SPEC_REV_1_4        = MP_SPEC_REV_1_4;
 constexpr uint8_t  MPFPS_FEAT_CTPRESENT      = 0;
 constexpr uint8_t  MPFPS_FEAT_VIRTWIRE       = 0;
-constexpr uint16_t MPCTABLE_HEADER_LENGTH    = 44;
-constexpr uint16_t MPCTABLE_LENGTH           = MPCTABLE_HEADER_LENGTH
-                                                +20*MP_MAX_VCPU_NUM;
 constexpr uint32_t MPCTABLE_INTEL_SIGNATURE  = static_cast<uint32_t>('P') << 24
                                              | static_cast<uint32_t>('M') << 16
                                              | static_cast<uint32_t>('C') << 8
@@ -77,7 +74,7 @@ constexpr uint32_t MPCTE_PROC_FEATFLAGS_FPU  = 0x0000'0001;
 constexpr uint32_t MPCTE_PROC_FEATFLAGS_APIC = 0x0000'0200;
 // Temporary!
 // We should fill the cpu signature field w/ a value returned by CPUID.
-constexpr uint32_t MPCTE_PROC_CPUSIGNATURE   = 0x0000'0600;
+constexpr uint32_t MPCTE_PROC_CPUSIGNATURE   = 0x0000'0600 << 16;
 
 constexpr uint32_t BOOT_EDD_MBR_SIG_MAX    = 16;
 constexpr uint32_t BOOT_E820_MAP_MAX       = 128;
@@ -119,12 +116,12 @@ struct mpfps {
 
 #pragma pack(1)
 struct mpctable_processor_entry {
-    uint8_t  entry_type = MPCTE_ENTRY_TYPE_PROC;
+    uint8_t  entry_type = 0;
     uint8_t  local_apic_id = 0;
-    uint8_t  local_apic_ver = MPCTE_PROC_APIC_VER;
+    uint8_t  local_apic_ver = 0;
     uint8_t  cpu_flags = 0;
     uint32_t cpu_sig = 0;
-    uint32_t feat_flags = MPCTE_PROC_FEATFLAGS_FPU | MPCTE_PROC_FEATFLAGS_APIC;
+    uint32_t feat_flags = 0;
     uint64_t reserved = 0;
 };
 
@@ -132,7 +129,7 @@ struct mpctable_processor_entry {
 struct mpctable {
     // header
     uint32_t signature = MPCTABLE_INTEL_SIGNATURE;
-    uint16_t length = MPCTABLE_LENGTH;
+    uint16_t length = sizeof(mpctable);
     uint8_t  spec_rev = MPCTABLE_SPEC_REV_1_4;
     uint8_t  checksum = 0;
     uint64_t oem_id = MPCTABLE_OEM_ID;
@@ -152,7 +149,7 @@ struct mpctable {
 struct ebda {  // why do we need padding?
                // just making
                // fps.phys_addr_ptr = EBDA_START + 0x10 seems to be fine
-    uint8_t  padding[EBDA_PADDING_SIZE];  // 48Bytes
+    uint8_t  padding[EBDA_PADDING_SIZE] = { 0 };  // 48Bytes
     mpfps    fps;     // 16Bytes
     mpctable ctable;  // (44+20*MP_MAX_VCPU_NUM)Bytes
 };
