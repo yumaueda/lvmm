@@ -211,16 +211,16 @@ struct e820entry {
 #pragma pack(1)
 struct boot_params {
     uint8_t      padding0[0x1e8] = { 0 };
-    uint8_t      e820_entries = 0;
+    uint8_t      e820_entries = 0;  // 0x1e8
     uint8_t      edd_buf_entries = 0;
     uint8_t      edd_mbr_sig_buf_entries = 0;
     uint8_t      kbd_status = 0;
     uint8_t      padding1[0x5] = { 0 };
-    setup_header header;
-    uint8_t      padding2[0x290-(0x1eb+0x5)-0x1-sizeof(setup_header)] = { 0 };
-    uint8_t      padding3[0x3d] = { 0 };
-    uint8_t      edd_mbr_sig_buf[BOOT_EDD_MBR_SIG_MAX] = { 0 };
-    e820entry    e820map[BOOT_E820_MAP_MAX];
+    setup_header header;  // 0x1f1
+    uint8_t      padding2[0x290-0x1f1-sizeof(setup_header)] = { 0 };
+    uint32_t     edd_mbr_sig_buf[BOOT_EDD_MBR_SIG_MAX] = { 0 };  // 0x290
+    e820entry    e820map[BOOT_E820_MAP_MAX];  // 0x2d0
+    // from arch/x86/include/uapi/asm/bootparam.h L228
 
  private:
     void increment_e820_entry();
