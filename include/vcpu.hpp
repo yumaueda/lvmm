@@ -105,6 +105,13 @@ constexpr uint8_t  SEG_DESC_DB_EX_LSET          = 0;
 constexpr uint8_t  SEG_DESC_L_64BIT_MODE        = 1;
 constexpr uint8_t  SEG_DESC_GRAN_4KB            = 1;
 
+struct vcpu_dregs {
+    uint64_t db[4];
+    uint64_t dr6;
+    uint64_t dr7;
+    uint64_t flags;
+    uint64_t reserved[9];
+};
 
 struct vcpu_regs {
     uint64_t rax, rbx, rcx, rdx;
@@ -143,18 +150,15 @@ struct vcpu_sregs {
 typedef segment_descriptor vcpu_sregs::*SegmentDescriptorPointer;
 typedef descriptor_table   vcpu_sregs::*DescriptorTablePointer;
 
-struct vcpu_dregs {
-    uint64_t db[4];
-    uint64_t dr6;
-    uint64_t dr7;
-    uint64_t flags;
-    uint64_t reserved[9];
-};
 
 class Vcpu : public BaseClass {
  public:
     explicit Vcpu(int vcpu_fd, KVM* kvm, VM* vm, int cpu_id);
     ~Vcpu();
+
+#ifdef GUEST_DEBUG
+    int SetGuestDebug(bool enable, bool singlestep);
+#endif  // GUEST_DEBUG
 
     int InitRegs(uint64_t rip, uint64_t rsi);
     int InitSregs(bool is_elfclass64);

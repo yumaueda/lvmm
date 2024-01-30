@@ -23,12 +23,34 @@
 #include <pio.hpp>
 
 
+#ifdef GUEST_DEBUG
+int Vcpu::SetGuestDebug(bool enable, bool singlestep) {
+    int r;
+    kvm_guest_debug debug;
+
+    debug.control = 0;
+    debug.pad = 0;
+
+    // debug.control |= 0x20000;  // Do we really need this?
+    // -> As this caused entry failure, it's commented out for now.
+    debug.control |= enable | singlestep;
+
+    if ((r = kvmIoctl(KVM_SET_GUEST_DEBUG, &debug))) {
+        perror(("Vcpu::" + std::string(__func__) + ": kvmIoctl").c_str());
+        return -r;
+    }
+
+    return 0;
+}
+#endif  // GUEST_DEBUG
+
 int Vcpu::GetRegs(vcpu_regs *regs) {
     int r;
     if ((r = kvmIoctl(KVM_GET_REGS, regs))) {
+        perror(("Vcpu::" + std::string(__func__) + ": kvmIoctl").c_str());
         std::cerr << "KVM_GET_REGS for vcpu_fd "
             << fd << std::endl;
-        return r;
+        return -errno;
     }
     return 0;
 }
@@ -36,9 +58,10 @@ int Vcpu::GetRegs(vcpu_regs *regs) {
 int Vcpu::GetSregs(vcpu_sregs *sregs) {
     int r;
     if ((r = kvmIoctl(KVM_GET_SREGS, sregs))) {
+        perror(("Vcpu::" + std::string(__func__) + ": kvmIoctl").c_str());
         std::cerr << "KVM_GET_SREGS for vcpu_fd "
             << fd << std::endl;
-        return r;
+        return -errno;
     }
     return 0;
 }
@@ -46,9 +69,10 @@ int Vcpu::GetSregs(vcpu_sregs *sregs) {
 int Vcpu::SetRegs(vcpu_regs *regs) {
     int r;
     if ((r = kvmIoctl(KVM_SET_REGS, regs))) {
+        perror(("Vcpu::" + std::string(__func__) + ": kvmIoctl").c_str());
         std::cerr << "KVM_SET_REGS for vcpu_fd "
             << fd << std::endl;
-        return r;
+        return -errno;
     }
     return 0;
 }
@@ -56,9 +80,10 @@ int Vcpu::SetRegs(vcpu_regs *regs) {
 int Vcpu::SetSregs(vcpu_sregs *sregs) {
     int r;
     if ((r = kvmIoctl(KVM_SET_SREGS, sregs))) {
+        perror(("Vcpu::" + std::string(__func__) + ": kvmIoctl").c_str());
         std::cerr << "KVM_SET_SREGS for vcpu_fd "
             << fd << std::endl;
-        return r;
+        return -errno;
     }
     return 0;
 }
@@ -467,6 +492,8 @@ int Vcpu::RunLoop() {
             std::cerr << "exit_reason: " << run->exit_reason << std::endl;
 
             switch (run->exit_reason) {
+                case KVM_EXIT_DEBUG:
+                    break;
                 case KVM_EXIT_MMIO:
                     std::cerr << std::hex << "run->mmio:\n"
                         << "	phys_addr: 0x" << run->mmio.phys_addr << '\n'

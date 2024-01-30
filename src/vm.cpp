@@ -442,6 +442,12 @@ int VM::Boot() {
     std::vector<std::thread> threads;
 
     for (int i = 0; i < vm_conf.vcpu_num; ++i) {
+#ifdef GUEST_DEBUG
+        vcpus[i].SetGuestDebug(true, true);  // should take a return value
+        std::cout << "VM::" << __func__ << ": Enabling vCPU["
+            << i << "] tracing (singlestep)" << std::endl;
+#endif  // GUEST_DEBUG
+
         std::cout << "VM::" << __func__ << ": Booting vCPU["
             << i << "]" << std::endl;
         threads.emplace_back(&Vcpu::RunLoop, &vcpus[i]);
