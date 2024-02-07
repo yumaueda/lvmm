@@ -1,6 +1,6 @@
 # lmigtester
 
-An Experimental VMM for Hardware Accelerated Live Migration.
+A VMM on KVM written in C++.
 
 ## Memory Layout
 
@@ -41,7 +41,17 @@ RSI->       0x0001_0000 +-----------------------------+
             0x0000_0000 +-----------------------------+
 ```
 
-## Ref
+## TODO
+
+- [ ] Boot linux in 32-bit boot protocol
+- [ ] Support COM1
+- [ ] Write error handling logics in decent manner with exceptions
+- [ ] Classes, members, methods, and functions also need to be designed properly
+- [ ] Capacity checks
+- [ ] Unit test
+- [ ] Support 64-bit boot protocol
+
+## References
 
 - https://docs.kernel.org/virt/kvm/index.html
 - https://www.kernel.org/doc/html/latest/arch/x86/boot.html
