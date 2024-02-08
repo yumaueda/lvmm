@@ -51,8 +51,9 @@ int VM::setTSSAddr() {
 
 int VM::setIdentityMapAddr() {
     int r;
+    uint64_t identity_map_base = IDENTITY_MAP_BASE;
 
-    r = kvmIoctl(KVM_SET_IDENTITY_MAP_ADDR, IDENTITY_MAP_BASE);
+    r = kvmIoctl(KVM_SET_IDENTITY_MAP_ADDR, &identity_map_base);
 
     if (r < 0) {
         perror(("VM::" + std::string(__func__) + ": kvmIoctl").c_str());
@@ -64,10 +65,61 @@ int VM::setIdentityMapAddr() {
     return r;
 }
 
+int VM::createIRQChip() {
+    int r;
+
+    r = kvmIoctl(KVM_CREATE_IRQCHIP, 0);
+
+    if (r < 0) {
+        perror(("VM::" + std::string(__func__) + ": kvmIoctl").c_str());
+        return -errno;
+    }
+
+    std::cout << "VM::" << __func__ << ": created" << std::endl;
+
+    return r;
+}
+
+int VM::createPIT2() {
+    int r;
+
+    r = kvmIoctl(KVM_CREATE_PIT2, &pit_config);
+
+    if (r < 0) {
+        perror(("VM::" + std::string(__func__) + ": kvmIoctl").c_str());
+        return -errno;
+    }
+
+    std::cout << "VM::" << __func__ << ": created" << std::endl;
+
+    return r;
+}
+
+int VM::createVcpu() {
+    int r;
+    vcpus = reinterpret_cast<Vcpu*>(
+                operator new[](vm_conf.vcpu_num*sizeof(Vcpu)));
+    std::cout << "VM::vcpus: " << vcpus << std::endl;
+
+    for (int i = 0; i < vm_conf.vcpu_num; ++i) {
+        r = kvmIoctl(KVM_CREATE_VCPU, i);
+        if (r < 0) {
+            perror(("VM::" + std::string(__func__) + ": kvmIoctl: ").c_str());
+            return -errno;
+        }
+        std::cout << "VM::" << __func__ << ": "
+            << "fd=" << r << " cpu_id= " << i << std::endl;
+        new(&vcpus[i]) Vcpu(r, kvm, this, i);
+        std::cout << "&VM.vcpus[" << i << "]: " << &vcpus[i] << std::endl;
+    }
+
+    return 0;
+}
+
 int VM::allocGuestRAM() {
     // not caring about hugetlbpage
     ram_start = mmap(NULL, vm_conf.ram_size, (PROT_READ|PROT_WRITE),
-                        (MAP_SHARED|MAP_ANONYMOUS|MAP_NORESERVE), -1, 0);
+            (MAP_SHARED|MAP_ANONYMOUS), -1, 0);
 
     if (ram_start == MAP_FAILED) {
         perror(("VM::" + std::string(__func__) + ": mmap").c_str());
@@ -76,6 +128,7 @@ int VM::allocGuestRAM() {
     std::cout << "VM::" << __func__ << ": VM.ram_start mmaped: "
         << ram_start << std::endl;
 
+    /*
     if (madvise(ram_start, vm_conf.ram_size, MADV_MERGEABLE) < 0) {
         perror(("VM::" + std::string(__func__) + ": madvise").c_str());
         return -errno;
@@ -83,6 +136,7 @@ int VM::allocGuestRAM() {
     std::cout << "VM::" << __func__
         << ": VM.ram_start madvised as MERGEABLE: "
         << ram_start << std::endl;
+    */
 
     return 0;
 }
@@ -109,27 +163,6 @@ int VM::setUserMemRegion() {
     std::cout << "VM::" << __func__ << ": registered" << std::endl;
 
     return r;
-}
-
-int VM::createVcpu() {
-    int r;
-    vcpus = reinterpret_cast<Vcpu*>(
-                operator new[](vm_conf.vcpu_num*sizeof(Vcpu)));
-    std::cout << "VM::vcpus: " << vcpus << std::endl;
-
-    for (int i = 0; i < vm_conf.vcpu_num; i++) {
-        r = kvmIoctl(KVM_CREATE_VCPU, i);
-        if (r < 0) {
-            perror(("VM::" + std::string(__func__) + ": kvmIoctl: ").c_str());
-            return -errno;
-        }
-        std::cout << "VM::" << __func__ << ": "
-            << "fd=" << r << " cpu_id= " << i << std::endl;
-        new(&vcpus[i]) Vcpu(r, kvm, this, i);
-        std::cout << "&VM.vcpus[" << i << "]: " << &vcpus[i] << std::endl;
-    }
-
-    return 0;
 }
 
 int VM::registerPIOHandler(uint16_t port_start, uint16_t port_end,
@@ -297,9 +330,9 @@ int VM::initRAM(std::string cmdline) {
 
     std::cout << "ebda generated" << '\n';
     std::cout << "ebda_data.fps.checksum: "
-        << ebda_data.fps.checksum+0 << '\n';
+        << +ebda_data.fps.checksum << '\n';
     std::cout << "ebda_data.ctable.checksum: "
-        << ebda_data.ctable.checksum+0 << std::endl;
+        << +ebda_data.ctable.checksum << std::endl;
 
     if (is_mp_checksum_valid(&ebda_data.fps)) {
         std::cout << "ebda_data.fps.checksum is valid." << std::endl;
@@ -331,7 +364,7 @@ int VM::initRAM(std::string cmdline) {
     // FIXME: should check commandline size before do this
     std::cout << "cmdline size: " << cmdline.size() << std::endl;
     cmdline_end = std::copy_n(cmdline.begin(), cmdline.size(), cmdline_start);
-    *cmdline_end = '\0';  // null-terminate
+    *(cmdline_start+cmdline.size()) = '\0';  // null-terminate
     std::cout << "cmdline copied to guest RAM: "
         << static_cast<void*>(cmdline_start) << std::endl;
     std::cout << "cmdline_end: "
@@ -385,6 +418,7 @@ int VM::initRAM(std::string cmdline) {
     bp.header.ramdisk_size   = ramdisk_size;
     bp.header.heap_end_ptr   = BOOT_PARAMS_ADDR - BOOT_HDR_HEAPEND_OFFSET;
     bp.header.cmd_line_ptr   = COMMANDLINE_ADDR;
+    //bp.header.cmdline_size   = cmdline.size()+1;
 
     boot_params_end = std::copy_n(&bp, 1, boot_params_start);
     std::cout << "boot_params copied to guest RAM: "
@@ -441,13 +475,15 @@ int VM::initVcpuSregs(bool is_64bit_boot) {
 int VM::Boot() {
     std::vector<std::thread> threads;
 
-    for (int i = 0; i < vm_conf.vcpu_num; ++i) {
 #ifdef GUEST_DEBUG
+    for (int i = 0; i < vm_conf.vcpu_num; ++i) {
         vcpus[i].SetGuestDebug(true, true);  // should take a return value
         std::cout << "VM::" << __func__ << ": Enabling vCPU["
             << i << "] tracing (singlestep)" << std::endl;
+    }
 #endif  // GUEST_DEBUG
 
+    for (int i = 0; i < vm_conf.vcpu_num; ++i) {
         std::cout << "VM::" << __func__ << ": Booting vCPU["
             << i << "]" << std::endl;
         threads.emplace_back(&Vcpu::RunLoop, &vcpus[i]);
@@ -465,19 +501,6 @@ int VM::Boot() {
 VM::VM(int vm_fd, KVM* kvm, vm_config vm_conf)\
         : BaseClass(vm_fd), kvm(kvm), vm_conf(vm_conf) {
     std::cout << "Constructing VM..." << std::endl;
-
-    // Currently we only assumes the case where unrestricted_guest == 1.
-    // So we won't call following APIs:
-    // - KVM_SET_TSS
-    // - KVM_SET_IDENTITY_MAP
-
-    // Create VIOAPIC, VPIC. Set up future vCPUs to use them as a local APIC.
-    // - GSI00-15 -> IOAPIC/PIC
-    // - GIS16-23 -> IOAPIC
-    kvmIoctlCtor(KVM_CREATE_IRQCHIP);
-    std::cout << "IRQCHIP created" << std::endl;
-    kvmIoctlCtor(KVM_CREATE_PIT2, &pit_config);
-    std::cout << "PIT2 created" << std::endl;
 
     kernel.open(vm_conf.kernel_path, std::ios::in | std::ios::binary);
     initramfs.open(vm_conf.initramfs_path, std::ios::in | std::ios::binary);

@@ -16,6 +16,12 @@
 
 class KVM;
 
+constexpr uint32_t KVM_CPUID_ENTRIES_NUM = 100;
+constexpr uint32_t KVM_CPUID_SIGNATURE   = 0x40000000;
+constexpr uint32_t KVM_CPUID_FEATURES    = 0x40000001;
+constexpr uint32_t KVM_CPUID_EBX         = 0x4b4d564b;
+constexpr uint32_t KVM_CPUID_ECX         = 0x564b4d56;
+constexpr uint32_t KVM_CPUID_EDX         = 0x0000004d;
 
 constexpr uint64_t CR0_PE = 1;
 constexpr uint64_t CR0_MP = 1 << 1;
@@ -127,19 +133,9 @@ struct descriptor_table {
     uint16_t padding[3];
 };
 
-struct segment_descriptor {
-    uint64_t base;
-    uint32_t limit;
-    uint16_t selector;
-    uint8_t  type;
-    uint8_t  present, dpl, db, s, l, g, avl;
-    uint8_t  unsusable = 0;
-    uint8_t  padding = 0;
-};
-
 struct vcpu_sregs {
-    segment_descriptor cs, ds, es, fs, gs, ss;
-    segment_descriptor tr, ldt;
+    kvm_segment cs, ds, es, fs, gs, ss;
+    kvm_segment tr, ldt;
     descriptor_table gdt, idt;
     uint64_t cr0, cr2, cr3, cr4, cr8;
     uint64_t efer;
@@ -147,7 +143,7 @@ struct vcpu_sregs {
     uint64_t interrupt_bitmap[(KVM_NR_INTERRUPTS+63)/64];
 };
 
-typedef segment_descriptor vcpu_sregs::*SegmentDescriptorPointer;
+typedef kvm_segment vcpu_sregs::*SegmentDescriptorPointer;
 typedef descriptor_table   vcpu_sregs::*DescriptorTablePointer;
 
 
@@ -169,6 +165,7 @@ class Vcpu : public BaseClass {
     VM*  vm;
     const int cpu_id;
 
+    kvm_cpuid2* kvm_cpuid = static_cast<kvm_cpuid2*>(nullptr);
     kvm_run* run = static_cast<kvm_run*>(nullptr);
 
     int GetRegs(vcpu_regs *regs);
@@ -177,7 +174,7 @@ class Vcpu : public BaseClass {
     int SetRegs(vcpu_regs *regs);
     int SetSregs(vcpu_sregs *sregs);
 
-    void DumpSegmentDescriptor(segment_descriptor& sd);
+    void DumpSegmentDescriptor(kvm_segment& sd);
     void DumpDescriptorTable(descriptor_table& dt);
     int DumpRegs();
     int DumpSregs();

@@ -42,6 +42,7 @@ class BaseClass {
     template<typename... kvmIoctlArgs>
     int _kvmIoctl(unsigned long request,
             bool raise_exception, kvmIoctlArgs... args) {
+        errno = 0;
 #ifdef MONITOR_IOCTL
         constexpr bool monitor_ioctl = true;
 #else
@@ -49,7 +50,6 @@ class BaseClass {
 #endif  // MONITOR_IOCTL
 
         int r = ioctl(fd, request, args...);
-        errno = 0;
 
         if (monitor_ioctl || raise_exception) {
             std::ostringstream args_oss;

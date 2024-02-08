@@ -68,6 +68,7 @@ class KVM : public BaseClass {
     }
 
     int kvmCreateVM(VM** ptr_vm, vm_config vm_conf);
+    int getSupportedCPUID(kvm_cpuid2* kvm_cpuid);
 
  private:
     int api_ver;

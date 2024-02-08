@@ -212,10 +212,10 @@ struct e820entry {
 struct boot_params {
     uint8_t      padding0[0x1e8] = { 0 };
     uint8_t      e820_entries = 0;  // 0x1e8
-    uint8_t      edd_buf_entries = 0;
-    uint8_t      edd_mbr_sig_buf_entries = 0;
-    uint8_t      kbd_status = 0;
-    uint8_t      padding1[0x5] = { 0 };
+    uint8_t      edd_buf_entries = 0;  // 0x1e9
+    uint8_t      edd_mbr_sig_buf_entries = 0;  // 0x1ea
+    uint8_t      kbd_status = 0;  // 0x1eb
+    uint8_t      padding1[0x5] = { 0 };  // 0x1ec
     setup_header header;  // 0x1f1
     uint8_t      padding2[0x290-0x1f1-sizeof(setup_header)] = { 0 };
     uint32_t     edd_mbr_sig_buf[BOOT_EDD_MBR_SIG_MAX] = { 0 };  // 0x290

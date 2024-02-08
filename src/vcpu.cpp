@@ -13,6 +13,8 @@
 
 #include <cassert>
 #include <cerrno>
+#include <cstdint>
+#include <cstdlib>
 #include <iomanip>
 #include <ios>
 #include <iostream>
@@ -31,11 +33,12 @@ int Vcpu::SetGuestDebug(bool enable, bool singlestep) {
     debug.control = 0;
     debug.pad = 0;
 
-    // debug.control |= 0x20000;  // Do we really need this?
+    debug.control |= 0x0200;  // Do we really need this?
     // -> As this caused entry failure, it's commented out for now.
-    debug.control |= enable | singlestep;
+    debug.control |= ((enable << 1)| singlestep);
 
-    if ((r = kvmIoctl(KVM_SET_GUEST_DEBUG, &debug))) {
+    r = kvmIoctl(KVM_SET_GUEST_DEBUG, &debug);
+    if (r < 0) {
         perror(("Vcpu::" + std::string(__func__) + ": kvmIoctl").c_str());
         return -r;
     }
@@ -46,29 +49,36 @@ int Vcpu::SetGuestDebug(bool enable, bool singlestep) {
 
 int Vcpu::GetRegs(vcpu_regs *regs) {
     int r;
-    if ((r = kvmIoctl(KVM_GET_REGS, regs))) {
+
+    r = kvmIoctl(KVM_GET_REGS, regs);
+    if (r < 0) {
         perror(("Vcpu::" + std::string(__func__) + ": kvmIoctl").c_str());
         std::cerr << "KVM_GET_REGS for vcpu_fd "
             << fd << std::endl;
         return -errno;
     }
+
     return 0;
 }
 
 int Vcpu::GetSregs(vcpu_sregs *sregs) {
     int r;
-    if ((r = kvmIoctl(KVM_GET_SREGS, sregs))) {
+
+    r = kvmIoctl(KVM_GET_SREGS, sregs);
+    if (r < 0) {
         perror(("Vcpu::" + std::string(__func__) + ": kvmIoctl").c_str());
         std::cerr << "KVM_GET_SREGS for vcpu_fd "
             << fd << std::endl;
         return -errno;
     }
+
     return 0;
 }
 
 int Vcpu::SetRegs(vcpu_regs *regs) {
     int r;
-    if ((r = kvmIoctl(KVM_SET_REGS, regs))) {
+    r = kvmIoctl(KVM_SET_REGS, regs);
+    if (r < 0) {
         perror(("Vcpu::" + std::string(__func__) + ": kvmIoctl").c_str());
         std::cerr << "KVM_SET_REGS for vcpu_fd "
             << fd << std::endl;
@@ -79,7 +89,8 @@ int Vcpu::SetRegs(vcpu_regs *regs) {
 
 int Vcpu::SetSregs(vcpu_sregs *sregs) {
     int r;
-    if ((r = kvmIoctl(KVM_SET_SREGS, sregs))) {
+    r = kvmIoctl(KVM_SET_SREGS, sregs);
+    if (r < 0) {
         perror(("Vcpu::" + std::string(__func__) + ": kvmIoctl").c_str());
         std::cerr << "KVM_SET_SREGS for vcpu_fd "
             << fd << std::endl;
@@ -108,7 +119,7 @@ int Vcpu::InitRegs(uint64_t rip, uint64_t rsi) {
 int Vcpu::InitSregs(bool is_64bit_boot) {
     int r;
     vcpu_sregs sregs;
-    segment_descriptor sd, others;
+    kvm_segment sd, others;
 
     if ((r = GetSregs(&sregs)))
         return r;
@@ -158,6 +169,8 @@ int Vcpu::InitSregs(bool is_64bit_boot) {
         .l        = SEG_DESC_L_64BIT_MODE,
         .g        = SEG_DESC_GRAN_4KB,
         .avl      = 0,
+        .unusable = 0,
+        .padding  = 0,
     };
 
     others = sd;
@@ -252,14 +265,14 @@ int Vcpu::DumpRegs() {
     return 0;
 }
 
-void Vcpu::DumpSegmentDescriptor(segment_descriptor& sd) {
+void Vcpu::DumpSegmentDescriptor(kvm_segment& sd) {
     std::cout.setf(std::ios::hex, std::ios::basefield);
 
     std::cout << std::setfill('0')
         << "base:     0x" << std::setw(16) << sd.base     << "\n"
         << "limit:    0x" << std::setw(8)  << sd.limit    << "\n"
         << "selector: 0x" << std::setw(4)  << sd.selector << "\n"
-        << "type:     0x" << std::setw(2)  << sd.type     << "\n";
+        << "type:     0x" << std::setw(2)  << +sd.type    << "\n";
 
     std::cout
         << "present:  " << (sd.present ? "1 " : "0 ")
@@ -305,7 +318,7 @@ int Vcpu::DumpSregs() {
         {"GS",  &vcpu_sregs::gs},
         {"SS",  &vcpu_sregs::ss},
         {"TR",  &vcpu_sregs::tr},
-        {"LDR", &vcpu_sregs::ldt},
+        {"LDT", &vcpu_sregs::ldt},
     };
 
     for (auto& pair : sdmap) {
@@ -406,19 +419,20 @@ int Vcpu::DumpSregs() {
 int Vcpu::Run() {
     int r;
 
-    if ((r = kvmIoctl(KVM_RUN, 0))) {
+    r = kvmIoctl(KVM_RUN, 0);
+    if (r < 0) {
         if (errno != EAGAIN && errno != EINTR) {
-            perror("Vcpu::run()");
-            return r;
+            perror("Vcpu::run(): cannot recover");
+            return -errno;
         }
     }
+    std::cout << "executed KVM_RUN: " << r << std::endl;
 
     return r;
 }
 
 int Vcpu::RunOnce() {
-    if (Run())
-        return 1;
+    Run();  // tmp
 
     switch (run->exit_reason) {
         case KVM_EXIT_UNKNOWN:
@@ -478,24 +492,69 @@ int Vcpu::RunOnce() {
 }
 
 int Vcpu::RunLoop() {
+    /*debug
+    while (true) {
+        Run();
+        switch (run->exit_reason) {
+            case KVM_EXIT_HLT:
+                std::cerr << "HLT" << std::endl;
+                return 1;
+            case KVM_EXIT_IO:
+                std::cerr << "IO" << std::endl;
+                return 1;
+            default:
+                std::cerr << "neigther HLT nor IO" << std::endl;
+                std::cerr << "exit_reason: " << run->exit_reason << std::endl;
+                return 1;
+        }
+    }
+    */
+
     int r;
-    uint64_t ic = 0;  // tmp
+
+#ifdef GUEST_DEBUG
+    uint64_t rc = 0;  // tmp
+    uint64_t rc_max = 100;
+#endif  // GUEST_DEBUG
 
     std::cout << "Vcpu::" << __func__ << ": cpu " << cpu_id
         << " is running" << std::endl;
 
     while (true) {
-        ic++;
+
+#ifdef GUEST_DEBUG
+run_loop_start:
+#endif  // GUEST_DEBUG
+
         if (RunOnce()) {
             std::cerr << "Vcpu::" << __func__ << ": cpu " << cpu_id
-                << ": ic: " << ic << " can not keep vCPU running" << std::endl;
+                << " : can not keep vCPU running" << std::endl;
             std::cerr << "exit_reason: " << run->exit_reason << std::endl;
 
             switch (run->exit_reason) {
                 case KVM_EXIT_DEBUG:
+
+#ifdef GUEST_DEBUG
+                    if (rc < rc_max) {
+                        this->SetGuestDebug(true, true);
+                        //if ((r = DumpRegs()))
+                        //    return r;
+                        //if ((r = DumpSregs()))
+                        //    return r;
+                        rc++;
+                        goto run_loop_start;
+                    }
+
+                    std::cerr << "KVM_EXIT_DEBUG: reached rc_max" << std::endl;
+#endif  // GUEST_DEBUG
+
+                    std::cerr << "KVM_EXIT_DEBUG" << std::endl;
                     break;
+
                 case KVM_EXIT_MMIO:
-                    std::cerr << std::hex << "run->mmio:\n"
+                    std::cerr << std::hex
+                        << "KVM_EXIT_MMIO\n"
+                        << "run->mmio:\n"
                         << "	phys_addr: 0x" << run->mmio.phys_addr << '\n'
                         << "	len: " << run->mmio.len << '\n'
                         << "	data: ";
@@ -505,8 +564,14 @@ int Vcpu::RunLoop() {
                         << "	is_write: " << +run->mmio.is_write << std::endl;
                     break;
 
+                case KVM_EXIT_SHUTDOWN:
+                    std::cerr << "KVM_EXIT_SHUTDOWN" << std::endl;
+                    break;
+
                 case KVM_EXIT_FAIL_ENTRY:
-                    std::cerr << "hardware_entry_failure_reason: "
+                    std::cerr
+                        << "KVM_EXIT_FAIL_ENTRY\n"
+                        << "hardware_entry_failure_reason: "
                         << run->fail_entry.hardware_entry_failure_reason
                         << std::endl;
                     break;
@@ -530,7 +595,22 @@ Vcpu::Vcpu(int vcpu_fd, KVM* kvm, VM* vm, int cpu_id)
     : BaseClass(vcpu_fd), kvm(kvm), vm(vm), cpu_id(cpu_id) {
     std::cout << "Constructing Vcpu..." << std::endl;
 
-    run = static_cast<struct kvm_run*>(mmap(NULL, kvm->mmap_size
+    kvm_cpuid = static_cast<kvm_cpuid2*>(calloc(1, sizeof(*kvm_cpuid) +
+                KVM_CPUID_ENTRIES_NUM*sizeof(*kvm_cpuid->entries)));
+
+    kvm_cpuid->nent = KVM_CPUID_ENTRIES_NUM;
+    kvm->getSupportedCPUID(kvm_cpuid);
+    for (uint32_t i = 0; i < kvm_cpuid->nent; ++i) {
+        if (kvm_cpuid->entries[i].function != KVM_CPUID_SIGNATURE)
+            continue;
+        kvm_cpuid->entries[i].eax = KVM_CPUID_FEATURES;
+        kvm_cpuid->entries[i].ebx = KVM_CPUID_EBX;
+        kvm_cpuid->entries[i].ecx = KVM_CPUID_ECX;
+        kvm_cpuid->entries[i].edx = KVM_CPUID_EDX;
+    }
+    kvmIoctlCtor(KVM_SET_CPUID2, kvm_cpuid);
+
+    run = static_cast<kvm_run*>(mmap(NULL, kvm->mmap_size
                 , PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0));
     if (run == MAP_FAILED) {
         perror("Vcpu.run: mmap");

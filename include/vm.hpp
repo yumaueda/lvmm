@@ -32,7 +32,7 @@ class VM;
 class KVM;
 
 
-constexpr const int INITMACHINE_FUNC_NUM = 6;
+constexpr const int INITMACHINE_FUNC_NUM = 8;
 
 
 struct vm_config {
@@ -84,11 +84,13 @@ class VM : public BaseClass {
 
     // TODO: use std::function!
     const InitMachineFunc initmachine_func[INITMACHINE_FUNC_NUM] = {
-        &VM::setTSSAddr,
-        &VM::setIdentityMapAddr,
+        &VM::setTSSAddr,          // not needed for unrestricted_guest = 1?
+        &VM::setIdentityMapAddr,  // not needed for unrestricted_guest = 1?
+        &VM::createIRQChip,
+        &VM::createPIT2,
+        &VM::createVcpu,
         &VM::allocGuestRAM,
         &VM::setUserMemRegion,
-        &VM::createVcpu,
         &VM::initPIOHandler,
     };
 
@@ -100,9 +102,11 @@ class VM : public BaseClass {
     // init machine funcs
     int setTSSAddr();
     int setIdentityMapAddr();
+    int createIRQChip();
+    int createPIT2();
+    int createVcpu();
     int allocGuestRAM();
     int setUserMemRegion();
-    int createVcpu();
     int initPIOHandler();
 
     // initRAM()

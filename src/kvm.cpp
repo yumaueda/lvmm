@@ -34,7 +34,7 @@ int KVM::kvmCreateVM(VM** ptr_vm, vm_config vm_conf) {
         std::cout
             << "KVM::" << __func__ << ": "
             << "WARNING: KVM.vm_conf.vcpu_num " << vm_conf.vcpu_num
-            << "exceeds kvm.soft_vcpus_limit " << cap.soft_vcpus_limit
+            << "exceeds KVM.soft_vcpus_limit " << cap.soft_vcpus_limit
             << std::endl;
     }
 
@@ -42,7 +42,7 @@ int KVM::kvmCreateVM(VM** ptr_vm, vm_config vm_conf) {
 
     if (r < 0) {
         perror(("KVM::" + std::string(__func__) + ": kvmIoctl").c_str());
-        return r;
+        return -errno;
     } else {
         std::cout << "KVM::" << __func__ << ": " << r << std::endl;
         *ptr_vm = new VM(r, this, vm_conf);
@@ -82,6 +82,20 @@ int KVM::kvmCapCheck() {
         std::cout << "KVM::" << __func__ << ": "
             << "KVM_CAP_MAX_VCPUS unsupported. "
             << "Assume KVM.hard_vcpus_limit = KVM.soft_vcpus_limit." << '\n';
+    }
+
+    return 0;
+}
+
+// garbage workaround
+int KVM::getSupportedCPUID(kvm_cpuid2* kvm_cpuid) {
+    int r;
+
+    r = kvmIoctl(KVM_GET_SUPPORTED_CPUID, kvm_cpuid);
+
+    if (r < 0) {
+        perror(("VM::" + std::string(__func__) + ": kvmIoctl").c_str());
+        return -errno;
     }
 
     return 0;
