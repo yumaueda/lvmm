@@ -204,13 +204,29 @@ int VM::initPIOHandler() {
     // COM1 (tmp) FIXME: handler needed!!!
     registerPIOHandler(PIO_PORT_COM1_START, PIO_PORT_COM1_END,
             do_nothing_pio_handler, do_nothing_pio_handler);
-    // Reset Generator
-    registerPIOHandler(PIO_PORT_RST_GEN_START, PIO_PORT_RST_GEN_END,
-            default_pio_handler, reset_generator_handler_out);
+
     // unknown...?
     registerPIOHandler(PIO_PORT_UNKNOWN_1_START, PIO_PORT_UNKNOWN_1_END,
             do_nothing_pio_handler, do_nothing_pio_handler);
+
+    // Reset Generator
+    registerPIOHandler(PIO_PORT_RST_GEN_START, PIO_PORT_RST_GEN_END,
+            default_pio_handler, reset_generator_handler_out);
+
+    // PCI configuration space access mechanism 1
+    registerPIOHandler(
+            PIO_PORT_PCI_CONFIG_ADDR_START,
+            PIO_PORT_PCI_CONFIG_ADDR_END,
+            do_nothing_pio_handler, do_nothing_pio_handler);
+
+    // unknown...?
     registerPIOHandler(PIO_PORT_UNKNOWN_2_START, PIO_PORT_UNKNOWN_2_END,
+            do_nothing_pio_handler, do_nothing_pio_handler);
+
+    // PCI configuration space access mechanism 1
+    registerPIOHandler(
+            PIO_PORT_PCI_CONFIG_DATA_START,
+            PIO_PORT_PCI_CONFIG_DATA_END,
             do_nothing_pio_handler, do_nothing_pio_handler);
 
     // PCI configuration space access mechanism 2
@@ -482,6 +498,7 @@ int VM::Boot() {
             << i << "] tracing (singlestep)" << std::endl;
     }
 #endif  // GUEST_DEBUG
+
 
     for (int i = 0; i < vm_conf.vcpu_num; ++i) {
         std::cout << "VM::" << __func__ << ": Booting vCPU["

@@ -422,7 +422,6 @@ int Vcpu::Run() {
             return -errno;
         }
     }
-    std::cout << "executed KVM_RUN: " << r << std::endl;
 
     return r;
 }

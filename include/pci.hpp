@@ -12,8 +12,10 @@
 #include <cstdint>
 #include <vector>
 
-constexpr uint16_t PIO_PORT_PCI_CONFIG_ADDR = 0x0CF8;
-constexpr uint16_t PIO_PORT_PCI_CONFIG_DATA = 0x0CFC;
+constexpr uint16_t PIO_PORT_PCI_CONFIG_ADDR_START = 0x0CF8;
+constexpr uint16_t PIO_PORT_PCI_CONFIG_ADDR_END   = 0x0CF9;
+constexpr uint16_t PIO_PORT_PCI_CONFIG_DATA_START = 0x0CFC;
+constexpr uint16_t PIO_PORT_PCI_CONFIG_DATA_END   = 0x0CFD;
 
 constexpr uint16_t PIO_PORT_PCI_CSAM2_START = 0xC000;
 constexpr uint16_t PIO_PORT_PCI_CSAM2_END   = 0xD000;
