@@ -48,6 +48,7 @@ RSI->       0x0001_0000 +-----------------------------+
 - [ ] Write error handling logics in decent manner with exceptions
 - [ ] Classes, members, methods, and functions also need to be designed properly
 - [ ] Capacity checks
+- [ ] Memory bank
 - [ ] Unit test
 - [ ] Support 64-bit boot protocol
 
