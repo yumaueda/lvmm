@@ -43,7 +43,7 @@ RSI->       0x0001_0000 +-----------------------------+
 
 ## TODO
 
-- [ ] Boot linux in 32-bit boot protocol
+- [x] Boot linux in 32-bit boot protocol
 - [ ] Support COM1
 - [ ] Write error handling logics in decent manner with exceptions
 - [ ] Classes, members, methods, and functions also need to be designed properly
