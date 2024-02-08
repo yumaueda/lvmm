@@ -58,15 +58,16 @@ class VM : public BaseClass {
     explicit VM(int vm_fd, KVM* kvm, vm_config config);
     ~VM();
 
+    void* ram_start = nullptr;
+    std::vector<std::unique_ptr<IODev>> iodev;
+    PCI pci;
+    PIOHandler pio_handler[PIO_PORT_NUM][2];
+
     int initMachine();
     int initRAM(std::string cmdline);
     int initVcpuRegs();
     int initVcpuSregs(bool is_64bit);
     int Boot();
-
-    std::vector<std::unique_ptr<IODev>> iodev;
-    PCI pci;
-    PIOHandler pio_handler[PIO_PORT_NUM][2];
 
  private:
     KVM* kvm;
@@ -79,7 +80,6 @@ class VM : public BaseClass {
     };
 
     Vcpu* vcpus = static_cast<Vcpu*>(nullptr);
-    void* ram_start = nullptr;
     kvm_userspace_memory_region user_memory_region;  // TMP
 
     // TODO: use std::function!

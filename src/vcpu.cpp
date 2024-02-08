@@ -28,19 +28,15 @@
 #ifdef GUEST_DEBUG
 int Vcpu::SetGuestDebug(bool enable, bool singlestep) {
     int r;
-    kvm_guest_debug debug;
+    kvm_guest_debug debug = {};
 
-    debug.control = 0;
-    debug.pad = 0;
-
-    debug.control |= 0x0200;  // Do we really need this?
-    // -> As this caused entry failure, it's commented out for now.
+    debug.control |= KVM_GUESTDBG_USE_HW_BP;
     debug.control |= ((enable << 1)| singlestep);
 
     r = kvmIoctl(KVM_SET_GUEST_DEBUG, &debug);
     if (r < 0) {
         perror(("Vcpu::" + std::string(__func__) + ": kvmIoctl").c_str());
-        return -r;
+        return -errno;
     }
 
     return 0;
@@ -492,29 +488,14 @@ int Vcpu::RunOnce() {
 }
 
 int Vcpu::RunLoop() {
-    /*debug
-    while (true) {
-        Run();
-        switch (run->exit_reason) {
-            case KVM_EXIT_HLT:
-                std::cerr << "HLT" << std::endl;
-                return 1;
-            case KVM_EXIT_IO:
-                std::cerr << "IO" << std::endl;
-                return 1;
-            default:
-                std::cerr << "neigther HLT nor IO" << std::endl;
-                std::cerr << "exit_reason: " << run->exit_reason << std::endl;
-                return 1;
-        }
-    }
-    */
-
     int r;
 
 #ifdef GUEST_DEBUG
-    uint64_t rc = 0;  // tmp
-    uint64_t rc_max = 100;
+    uint64_t  rc = 0;  // tmp
+    uint64_t  rc_max = 10;
+    vcpu_regs regs;
+    char*     inst_hva_base;
+    char      bin;
 #endif  // GUEST_DEBUG
 
     std::cout << "Vcpu::" << __func__ << ": cpu " << cpu_id
@@ -536,16 +517,36 @@ run_loop_start:
 
 #ifdef GUEST_DEBUG
                     if (rc < rc_max) {
-                        this->SetGuestDebug(true, true);
-                        //if ((r = DumpRegs()))
-                        //    return r;
-                        //if ((r = DumpSregs()))
-                        //    return r;
+                        SetGuestDebug(true, true);
+
+                        GetRegs(&regs);
+
+                        std::cout.setf(std::ios::hex, std::ios::basefield);
+                        std::cout << "regs.rip: " << regs.rip << std::endl;
+
+                        inst_hva_base = reinterpret_cast<char*>(
+                                vm->ram_start) + regs.rip;
+
+                        DumpRegs();
+
+                        for (int i = 0; i < 16; ++i) {
+                            bin = *inst_hva_base++;
+                            std::cout
+                                << std::setfill('0')
+                                << std::setw(2)
+                                << +(uint8_t)bin
+                                << " ";
+                        }
+
+                        std::cout << std::endl;
+                        std::cout.setf(std::ios::dec, std::ios::basefield);
+
                         rc++;
                         goto run_loop_start;
                     }
 
                     std::cerr << "KVM_EXIT_DEBUG: reached rc_max" << std::endl;
+                    break;
 #endif  // GUEST_DEBUG
 
                     std::cerr << "KVM_EXIT_DEBUG" << std::endl;

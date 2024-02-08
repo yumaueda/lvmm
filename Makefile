@@ -75,11 +75,14 @@ unittest_debug: $(test_src) $(tested_src) $(gtest_lib)
 initramfs: scripts/geninitramfs.bash
 	./scripts/geninitramfs.bash
 
-lmigtester_debug: $(src) $(include)
-	$(CXX) $(CFLAGS) $(CFLAGS_DEBUG) -o $@ $(src)
-
 lmigtester: $(src) $(include)
 	$(CXX) $(CFLAGS) $(src) -o $@
+
+lmigtester_trace: $(src) $(include)
+	$(CXX) $(CFLAGS) $(src) -o $@ -DGUEST_DEBUG
+
+lmigtester_debug: $(src) $(include)
+	$(CXX) $(CFLAGS) $(CFLAGS_DEBUG) -o $@ $(src)
 
 .PHONY: clean tag lint
 
