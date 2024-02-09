@@ -202,9 +202,6 @@ int VM::initPIOHandler() {
     // COM3
     registerPIOHandler(PIO_PORT_COM3_START, PIO_PORT_COM3_END,
             do_nothing_pio_handler, do_nothing_pio_handler);
-    // COM1
-    registerPIOHandler(PIO_PORT_COM1_START, PIO_PORT_COM1_START+PIO_PORT_COM1_SIZE,
-            do_nothing_pio_handler, do_nothing_pio_handler);
 
     // unknown...?
     registerPIOHandler(PIO_PORT_UNKNOWN_1_START, PIO_PORT_UNKNOWN_1_END,
