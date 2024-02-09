@@ -477,10 +477,10 @@ int VM::initVcpuRegs() {
     return 0;
 }
 
-int VM::initVcpuSregs(bool is_64bit_boot) {
-    assert(!is_64bit_boot);
+int VM::initVcpuSregs() {
+    assert(!vm_conf.is_64bit_boot);
     for (int i = 0; i < vm_conf.vcpu_num; ++i) {
-        if ((vcpus+i)->InitSregs(is_64bit_boot))
+        if ((vcpus+i)->InitSregs(vm_conf.is_64bit_boot))
             return 1;
     }
     std::cout << "VM::" << __func__ << ": success" << std::endl;

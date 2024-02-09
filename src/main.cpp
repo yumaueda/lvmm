@@ -50,18 +50,6 @@ int main() {
         return -1;
     }
 
-    r = vm->initVcpuRegs();  // TODO: move inside initMachine
-    if (r) {
-        std::cerr << "vm->initVcpuRegs() failed" << std::endl;
-        return -1;
-    }
-
-    r = vm->initVcpuSregs(vm_conf.is_64bit_boot);  // TODO: move inside initMachine
-    if (r) {
-        std::cerr << "vm->initVcpuSregs() failed" << std::endl;
-        return -1;
-    }
-
     r = vm->Boot();
 
     return 0;

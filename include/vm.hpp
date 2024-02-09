@@ -33,7 +33,7 @@ class KVM;
 class IODev;
 
 
-constexpr const int INITMACHINE_FUNC_NUM = 8;
+constexpr const int INITMACHINE_FUNC_NUM = 10;
 
 
 struct vm_config {
@@ -66,8 +66,7 @@ class VM : public BaseClass {
 
     int initMachine();
     int initRAM(std::string cmdline);
-    int initVcpuRegs();
-    int initVcpuSregs(bool is_64bit);
+
     int Boot();
     int irqLine(uint32_t irq, uint32_t level);
     int flapIRQLine(uint32_t irq);
@@ -95,6 +94,8 @@ class VM : public BaseClass {
         &VM::allocGuestRAM,
         &VM::setUserMemRegion,
         &VM::initPIOHandler,
+        &VM::initVcpuRegs,
+        &VM::initVcpuSregs,
     };
 
     int registerPIOHandler(uint16_t port_start, uint16_t port_end,
@@ -102,6 +103,7 @@ class VM : public BaseClass {
 
     // initMachine()
     void addIODev(IODev* iodev_ptr);
+
     // init machine funcs
     int setTSSAddr();
     int setIdentityMapAddr();
@@ -111,6 +113,8 @@ class VM : public BaseClass {
     int allocGuestRAM();
     int setUserMemRegion();
     int initPIOHandler();
+    int initVcpuRegs();
+    int initVcpuSregs();
 
     // initRAM()
     int createPageTable(uint64_t boot_pgtable_base);
