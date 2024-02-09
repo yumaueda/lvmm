@@ -12,6 +12,7 @@
 #include <cstdint>
 
 #include <iodev.hpp>
+#include <vm.hpp>
 
 
 constexpr uint16_t PIO_PORT_POST_START = 0x80;
@@ -20,7 +21,7 @@ constexpr uint8_t  PIO_PORT_POST_SIZE  = 0xA0;
 
 class Post : public IODev {
  public:
-    explicit Post();
+    explicit Post(VM* vm);
     int Read(uint16_t, char*, uint8_t) override;
     int Write(uint16_t, char*, uint8_t) override;
 };

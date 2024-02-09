@@ -30,6 +30,7 @@
 class Vcpu;
 class VM;
 class KVM;
+class IODev;
 
 
 constexpr const int INITMACHINE_FUNC_NUM = 8;
@@ -68,6 +69,8 @@ class VM : public BaseClass {
     int initVcpuRegs();
     int initVcpuSregs(bool is_64bit);
     int Boot();
+    int irqLine(uint32_t irq, uint32_t level);
+    int flapIRQLine(uint32_t irq);
 
  private:
     KVM* kvm;

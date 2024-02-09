@@ -12,6 +12,7 @@
 #include <cstdint>
 
 #include <iodev.hpp>
+#include <vm.hpp>
 
 
 constexpr uint16_t PIO_PORT_CMOS_START = 0x70;
@@ -58,7 +59,7 @@ static inline int bin_to_bcd(uint8_t bin) {
 
 class CMOS : public IODev {
  public:
-    explicit CMOS();
+    explicit CMOS(VM* vm);
     int Read(uint16_t, char*, uint8_t) override;
     int Write(uint16_t port, char*, uint8_t) override;
 

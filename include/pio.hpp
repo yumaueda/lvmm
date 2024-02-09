@@ -36,9 +36,6 @@ constexpr uint16_t PIO_PORT_VGA_1_END       = 0x3E0;  // 0x3DB?
 constexpr uint16_t PIO_PORT_COM3_START      = 0x3E8;
 constexpr uint16_t PIO_PORT_COM3_END        = 0x3F0;
 
-constexpr uint16_t PIO_PORT_COM1_START      = 0x3F8;
-constexpr uint16_t PIO_PORT_COM1_END        = 0x400;
-
 constexpr uint16_t PIO_PORT_RST_GEN_START   = 0xCF9;
 constexpr uint16_t PIO_PORT_RST_GEN_END     = 0xCFA;
 

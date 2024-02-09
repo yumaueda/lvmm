@@ -9,5 +9,8 @@
 
 #include <cstdint>
 
+#include <vm.hpp>
 
-IODev::IODev(uint16_t port, uint8_t size) : port(port), size(size) {}
+
+IODev::IODev(uint16_t port, uint8_t size, VM* vm)\
+        : port(port), size(size), vm(vm) {}

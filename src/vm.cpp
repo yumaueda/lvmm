@@ -13,10 +13,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cerrno>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <cerrno>
 #include <exception>
 #include <ios>
 #include <iostream>
@@ -27,6 +27,7 @@
 
 #include <boot.hpp>
 #include <cmos.hpp>
+#include <com1.hpp>
 #include <paging.hpp>
 #include <pci.hpp>
 #include <pio.hpp>
@@ -201,8 +202,8 @@ int VM::initPIOHandler() {
     // COM3
     registerPIOHandler(PIO_PORT_COM3_START, PIO_PORT_COM3_END,
             do_nothing_pio_handler, do_nothing_pio_handler);
-    // COM1 (tmp) FIXME: handler needed!!!
-    registerPIOHandler(PIO_PORT_COM1_START, PIO_PORT_COM1_END,
+    // COM1
+    registerPIOHandler(PIO_PORT_COM1_START, PIO_PORT_COM1_START+PIO_PORT_COM1_SIZE,
             do_nothing_pio_handler, do_nothing_pio_handler);
 
     // unknown...?
@@ -266,8 +267,9 @@ void VM::addIODev(IODev* iodev_ptr) {
 int VM::initMachine() {
     int r;
 
-    addIODev(new Post);
-    addIODev(new CMOS);
+    addIODev(new Post(this));
+    addIODev(new CMOS(this));
+    addIODev(new COM1(this));
 
     for (const InitMachineFunc e : initmachine_func) {
         r = (this->*e)();
@@ -511,6 +513,35 @@ int VM::Boot() {
             e.join();
         }
     }
+
+    return 0;
+}
+
+int VM::irqLine(uint32_t irq, uint32_t level) {
+    int r;
+
+    kvm_irq_level irq_level = {
+        .irq   = irq,
+        .level = level,
+    };
+
+    r = kvmIoctl(KVM_IRQ_LINE, &irq_level);
+
+    if (r < 0) {
+        perror(("VM::" + std::string(__func__) + ": kvmIoctl").c_str());
+        return -errno;
+    }
+
+    return 0;
+}
+
+int VM::flapIRQLine(uint32_t irq) {
+    int r;
+
+    if ((r = irqLine(irq, false)))
+        return r;
+    if ((r = irqLine(irq, true)))
+        return r;
 
     return 0;
 }

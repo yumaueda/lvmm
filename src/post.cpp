@@ -10,6 +10,7 @@
 #include <cstdint>
 
 #include <iodev.hpp>
+#include <vm.hpp>
 
 
 int Post::Read(uint16_t, char*, uint8_t) {
@@ -20,4 +21,4 @@ int Post::Write(uint16_t, char*, uint8_t) {
     return 0;
 }
 
-Post::Post() : IODev(PIO_PORT_POST_START, PIO_PORT_POST_SIZE) {}
+Post::Post(VM* vm) : IODev(PIO_PORT_POST_START, PIO_PORT_POST_SIZE, vm) {}

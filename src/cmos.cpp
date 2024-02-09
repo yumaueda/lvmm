@@ -12,6 +12,7 @@
 #include <ctime>
 
 #include <iodev.hpp>
+#include <vm.hpp>
 
 
 int CMOS::Read(uint16_t port, char* data_ptr, uint8_t size) {
@@ -132,4 +133,5 @@ int CMOS::Write(uint16_t port, char* data_ptr, uint8_t size) {
     return 0;
 }
 
-CMOS::CMOS() : IODev(PIO_PORT_CMOS_START, PIO_PORT_CMOS_SIZE) {}
+CMOS::CMOS(VM* vm)\
+        : IODev(PIO_PORT_CMOS_START, PIO_PORT_CMOS_SIZE, vm) {}
