@@ -33,12 +33,24 @@ constexpr uint16_t PIO_PORT_COM1_SR          = PIO_PORT_COM1_START + 7;
 
 // Not 16750 comp.
 constexpr uint8_t COM1_REG_DLL_9600          = 0x0C;
-constexpr uint8_t COM1_REG_IER_UNUSED_MASK   = 0b1100'0000;
+constexpr uint8_t COM1_REG_IER_WRITABLE_MASK = 0b0000'1111;
 constexpr uint8_t COM1_REG_IER_DATA_AVL_MASK = 0b0000'0001;
 constexpr uint8_t COM1_REG_DLH_9600          = 0x00;
 constexpr uint8_t COM1_REG_LCR_DLAB          = 0b1000'0000;
-constexpr uint8_t COM1_REG_LCR_EDHR          = 0b0100'0000;
-constexpr uint8_t COM1_REG_LCR_ETHR          = 0b0010'0000;
+constexpr uint8_t COM1_REG_LSR_TEMT          = 0b0100'0000;
+constexpr uint8_t COM1_REG_LSR_THRE          = 0b0010'0000;
+constexpr uint8_t COM1_REG_FCR_ENABLE        = 0b0000'0001;
+constexpr uint8_t COM1_REG_IIR_NO_INT_PEND   = 0b0000'0001;
+constexpr uint8_t COM1_REG_IIR_FIFO_16550A   = 0b1100'0000;
+constexpr uint8_t COM1_REG_MCR_DTR           = 0b0000'0001;
+constexpr uint8_t COM1_REG_MCR_RTS           = 0b0000'0010;
+constexpr uint8_t COM1_REG_MCR_OUT1          = 0b0000'0100;
+constexpr uint8_t COM1_REG_MCR_OUT2          = 0b0000'1000;
+constexpr uint8_t COM1_REG_MCR_LOOP          = 0b0001'0000;
+constexpr uint8_t COM1_REG_MSR_CTS           = 0b0001'0000;
+constexpr uint8_t COM1_REG_MSR_DSR           = 0b0010'0000;
+constexpr uint8_t COM1_REG_MSR_RI            = 0b0100'0000;
+constexpr uint8_t COM1_REG_MSR_DCD           = 0b1000'0000;
 
 
 class COM1 : public IODev {

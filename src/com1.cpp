@@ -24,9 +24,8 @@ bool COM1::is_dlab_set() {
 int COM1::Read(uint16_t port, char* data_ptr, uint8_t) {
     switch (port) {
         case PIO_PORT_COM1_THR_RBR_DLL:
-            // NO input method for now
-            if (!is_dlab_set()) {  // Unimplemented
-                break;
+            if (!is_dlab_set()) {  // RBR (no RX yet)
+                data_ptr[0] = 0;
             } else {               // DLL
                 data_ptr[0] = COM1_REG_DLL_9600;
             }
@@ -40,18 +39,44 @@ int COM1::Read(uint16_t port, char* data_ptr, uint8_t) {
             }
             break;
 
-        case PIO_PORT_COM1_IIR_FCR:  // Unimplemented
-        case PIO_PORT_COM1_LCR:  // Unimplemented
-        case PIO_PORT_COM1_MCR:  // Unimplemented
+        case PIO_PORT_COM1_IIR_FCR:
+            // Top two bits report FIFO state (16550A when enabled);
+            // bottom bit set means "no interrupt pending".
+            data_ptr[0] = COM1_REG_IIR_NO_INT_PEND;
+            if (FCR & COM1_REG_FCR_ENABLE)
+                data_ptr[0] |= COM1_REG_IIR_FIFO_16550A;
+            break;
+
+        case PIO_PORT_COM1_LCR:
+            data_ptr[0] = LCR;
+            break;
+
+        case PIO_PORT_COM1_MCR:
+            data_ptr[0] = MCR;
             break;
 
         case PIO_PORT_COM1_LSR:
-            data_ptr[0] = COM1_REG_LCR_EDHR | COM1_REG_LCR_ETHR;
-            // IF INPUT THEN data_ptr[0] = 0x01
+            data_ptr[0] = COM1_REG_LSR_TEMT | COM1_REG_LSR_THRE;
             break;
 
-        case PIO_PORT_COM1_MSR:  // Unimplemented
-        case PIO_PORT_COM1_SR:  // Unimplemented
+        case PIO_PORT_COM1_MSR:
+            if (MCR & COM1_REG_MCR_LOOP) {
+                // Loopback: upper nibble reflects MCR control bits.
+                data_ptr[0] = 0;
+                if (MCR & COM1_REG_MCR_DTR)  data_ptr[0] |= COM1_REG_MSR_DSR;
+                if (MCR & COM1_REG_MCR_RTS)  data_ptr[0] |= COM1_REG_MSR_CTS;
+                if (MCR & COM1_REG_MCR_OUT1) data_ptr[0] |= COM1_REG_MSR_RI;
+                if (MCR & COM1_REG_MCR_OUT2) data_ptr[0] |= COM1_REG_MSR_DCD;
+            } else {
+                // No real peer; report CTS/DSR/DCD asserted so flow control passes.
+                data_ptr[0] = COM1_REG_MSR_CTS
+                            | COM1_REG_MSR_DSR
+                            | COM1_REG_MSR_DCD;
+            }
+            break;
+
+        case PIO_PORT_COM1_SR:
+            data_ptr[0] = SR;
             break;
 
         default:
@@ -66,6 +91,10 @@ int COM1::Write(uint16_t port, char* data_ptr, uint8_t) {
     switch (port) {
         case PIO_PORT_COM1_THR_RBR_DLL:
             if (!is_dlab_set()) {  // THR
+                // In loopback mode the byte should land in RBR, not the host
+                // serial line. RX path isn't implemented yet, so just drop it.
+                if (MCR & COM1_REG_MCR_LOOP)
+                    break;
                 r = write(STDOUT_FILENO, data_ptr, 1);
                 if (r == -1) {
                     perror(("COM1::" + std::string(__func__) +
@@ -79,17 +108,14 @@ int COM1::Write(uint16_t port, char* data_ptr, uint8_t) {
 
         case PIO_PORT_COM1_IER_DLH:
             if (!is_dlab_set()) {  // IER
-                IER = data_ptr[0] & COM1_REG_IER_UNUSED_MASK;
-                if (IER) {
-                    if ((r = vm->flapIRQLine(COM1_IRQ)))
-                        return r;
-                }
+                IER = data_ptr[0] & COM1_REG_IER_WRITABLE_MASK;
             } else {               // DLH
                 DLH = data_ptr[0];
             }
             break;
 
-        case PIO_PORT_COM1_IIR_FCR:  // Unimplemented
+        case PIO_PORT_COM1_IIR_FCR:
+            FCR = data_ptr[0];
             break;
 
         case PIO_PORT_COM1_LCR:
@@ -97,9 +123,16 @@ int COM1::Write(uint16_t port, char* data_ptr, uint8_t) {
             break;
 
         case PIO_PORT_COM1_MCR:
+            MCR = data_ptr[0];
+            break;
+
         case PIO_PORT_COM1_LSR:
         case PIO_PORT_COM1_MSR:
+            // Read-only in real hardware; ignore writes.
+            break;
+
         case PIO_PORT_COM1_SR:
+            SR = data_ptr[0];
             break;
 
         default:
