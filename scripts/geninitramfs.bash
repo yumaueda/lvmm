@@ -4,7 +4,7 @@ set -e
 pwd=$(pwd)
 cd ${GOPATH}/src/github.com/u-root/u-root && u-root \
     -defaultsh $(which bash) \
-    -uinitcmd "/uinit.sh" \
+    -uinitcmd "/bbin/gosh" \
     -o ${pwd}/initramfs \
     -files $(which bash) \
     -files $(which lsblk) \
