@@ -40,9 +40,15 @@ int COM1::Read(uint16_t port, char* data_ptr, uint8_t) {
             break;
 
         case PIO_PORT_COM1_IIR_FCR:
-            // Top two bits report FIFO state (16550A when enabled);
-            // bottom bit set means "no interrupt pending".
-            data_ptr[0] = COM1_REG_IIR_NO_INT_PEND;
+            // Top two bits report FIFO state (16550A when enabled).  When
+            // TX-empty interrupts are enabled the THR is always empty in this
+            // model, so the THRE source is what we report; otherwise advertise
+            // "no interrupt pending".
+            if (IER & 0b0000'0010) {
+                data_ptr[0] = 0b0000'0010;  // THRE interrupt (source = 001)
+            } else {
+                data_ptr[0] = COM1_REG_IIR_NO_INT_PEND;
+            }
             if (FCR & COM1_REG_FCR_ENABLE)
                 data_ptr[0] |= COM1_REG_IIR_FIFO_16550A;
             break;
@@ -101,6 +107,13 @@ int COM1::Write(uint16_t port, char* data_ptr, uint8_t) {
                                 ": write").c_str());
                     return -errno;
                 }
+                // THRE is always reported as 1, so as long as the TX-empty
+                // interrupt is enabled we must keep notifying the guest so it
+                // drains its xmit buffer past the first FIFO load.
+                if (IER & 0b0000'0010) {
+                    if ((r = vm->flapIRQLine(COM1_IRQ)))
+                        return r;
+                }
             } else {               // DLL
                 DLL = data_ptr[0];
             }
@@ -109,6 +122,12 @@ int COM1::Write(uint16_t port, char* data_ptr, uint8_t) {
         case PIO_PORT_COM1_IER_DLH:
             if (!is_dlab_set()) {  // IER
                 IER = data_ptr[0] & COM1_REG_IER_WRITABLE_MASK;
+                // Kickstart the TX-empty interrupt cycle once enabled, since
+                // we always advertise THRE.
+                if (IER & 0b0000'0010) {
+                    if ((r = vm->flapIRQLine(COM1_IRQ)))
+                        return r;
+                }
             } else {               // DLH
                 DLH = data_ptr[0];
             }
