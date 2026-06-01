@@ -1,4 +1,4 @@
-# lmigtester
+# lvmm
 
 A VMM on KVM written in C++.
 
