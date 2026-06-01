@@ -81,7 +81,15 @@ bool cpuSupportsVM() {
             return false;
     }
 
-    if (regs.eax < eax_feat) {
+    if (eax_feat & 0x80000000) {
+        cpuid_regs ext_regs = { 0x80000000, 0, 0, 0 };
+        cpuid(&ext_regs);
+        if (ext_regs.eax < eax_feat) {
+            throw std::runtime_error(std::string(__func__) + ": "
+                    "Getting feature information is not supported.");
+            return false;
+        }
+    } else if (regs.eax < eax_feat) {
         throw std::runtime_error(std::string(__func__) + ": "
                 "Getting feature information is not supported.");
         return false;
