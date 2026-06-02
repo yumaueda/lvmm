@@ -13,6 +13,11 @@
 
 
 #include <cstdint>
+#include <termios.h>
+#include <atomic>
+#include <deque>
+#include <mutex>
+#include <thread>
 
 #include <iodev.hpp>
 #include <vm.hpp>
@@ -56,6 +61,7 @@ constexpr uint8_t COM1_REG_MSR_DCD           = 0b1000'0000;
 class COM1 : public IODev {
  public:
     explicit COM1(VM* vm);
+    ~COM1();
     int Read(uint16_t port, char* data_ptr, uint8_t) override;
     int Write(uint16_t port, char* data_ptr, uint8_t) override;
 
@@ -71,6 +77,17 @@ class COM1 : public IODev {
     uint8_t LSR{0};            // 5/x/R
     uint8_t MSR{0};            // 6/x/R
     uint8_t SR{0};             // 7/x/RW
+
+    // RX path: a reader thread pushes host stdin bytes into rx_buf, and
+    // COM1::Read drains rx_buf on RBR reads.
+    std::mutex rx_mutex;
+    std::deque<uint8_t> rx_buf;
+    std::thread reader_thread;
+    std::atomic<bool> shutting_down{false};
+    bool termios_saved{false};
+    struct termios saved_termios;
+
+    void readerLoop();
 
     bool is_dlab_set();
 };
