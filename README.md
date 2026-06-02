@@ -98,17 +98,6 @@ RSI->       0x0001_0000 +-----------------------------+
             0x0000_0000 +-----------------------------+
 ```
 
-## TODO
-
-- [x] Boot linux in 32-bit boot protocol
-- [x] Support COM1
-- [ ] Write error handling logics in decent manner with exceptions
-- [ ] Classes, members, methods, and functions also need to be designed properly
-- [ ] Capacity checks
-- [ ] Memory bank
-- [ ] Unit test
-- [ ] Support 64-bit boot protocol
-
 ## References
 
 - https://www.kernel.org/doc/html/latest/virt/kvm/index.html
