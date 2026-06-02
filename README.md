@@ -2,6 +2,63 @@
 
 A VMM on KVM written in C++.
 
+## Build & Run
+
+The VMM needs three artifacts side-by-side at runtime: the `lvmm` binary,
+a guest kernel image at `./bzImage`, and a `./initramfs` cpio archive.
+
+### Host prerequisites
+
+```
+sudo apt-get install -y \
+    build-essential libelf-dev libssl-dev libncurses-dev bison flex bc cpio
+```
+
+Go (for u-root) and a `/dev/kvm` accessible to your user (group `kvm` or an
+ACL entry; check with `getfacl /dev/kvm`) are also required.
+
+### lvmm binary
+
+```
+make lvmm
+```
+
+### Guest kernel (`bzImage`)
+
+The bundled `linux.config` targets Linux 5.14.3. With a newer host gcc
+you also need `WERROR=0` to silence `-Wuse-after-free` in `tools/objtool`.
+
+```
+curl -O https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.14.3.tar.xz
+tar xf linux-5.14.3.tar.xz
+cp linux.config linux-5.14.3/.config
+cd linux-5.14.3
+make olddefconfig
+make WERROR=0 -j$(nproc) bzImage
+cp arch/x86/boot/bzImage ../bzImage
+```
+
+### Initramfs
+
+`scripts/geninitramfs.bash` drives u-root and bakes `gosh` in as
+`/bbin/uinit` so PID 1 boots straight into a shell prompt.
+
+```
+go install github.com/u-root/u-root@latest
+mkdir -p ~/go/src/github.com/u-root
+git clone https://github.com/u-root/u-root ~/go/src/github.com/u-root/u-root
+GOPATH=$HOME/go make initramfs
+```
+
+### Run
+
+```
+./lvmm
+```
+
+`./lvmm` switches the host terminal to raw mode and forwards keystrokes to
+the guest serial port, so you can type commands at the `$` prompt.
+
 ## Memory Layout
 
 ```
@@ -44,7 +101,7 @@ RSI->       0x0001_0000 +-----------------------------+
 ## TODO
 
 - [x] Boot linux in 32-bit boot protocol
-- [ ] Support COM1
+- [x] Support COM1
 - [ ] Write error handling logics in decent manner with exceptions
 - [ ] Classes, members, methods, and functions also need to be designed properly
 - [ ] Capacity checks
