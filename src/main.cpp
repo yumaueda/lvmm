@@ -43,7 +43,6 @@ int main() {
         return -1;
     }
 
-    //r = vm->initRAM("console=ttyS0 earlyprintk=serial noapic noacpi notsc nowatchdog nmi_watchdog=0 debug apic=debug show_lapic=all mitigations=off lapic tsc_early_khz=2000 dyndbg=\"file arch/x86/kernel/smpboot.c +plf ; file drivers/net/virtio_net.c +plf\" pci=realloc=off virtio_pci.force_legacy=1 rdinit=/init init=/init");
     r = vm->initRAM("console=ttyS0 earlyprintk=serial noapic noacpi nowatchdog nmi_watchdog=0 debug apic=debug show_lapic=all mitigations=off lapic rdinit=/init init=/init");
     if (r) {
         std::cerr << "vm->initRAM() failed" << std::endl;
